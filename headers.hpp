@@ -2,10 +2,11 @@
 #define HEADERS_HPP
 
 #include <iostream>
+#include <vector>
+#include <algorithm>
 #include <fstream>
 #include <Eigen/Eigen>
 #include <mpi.h>
-
 using namespace std;
 
 //================================================================================
@@ -79,6 +80,9 @@ void buildLocalNumbering(Mesh& m);
 
 // MPI-parallel exchange/add the interface terms
 void exchangeAddInterfMPI(Vector& vec, Mesh& m);
+
+// Compute the local L2 error 
+void computeL2Err(double& L2_err_loc, Vector& uNum, Vector& uExa, Mesh& m);
 
 //==== Functions in 'problem.cpp'
 
