@@ -10,7 +10,7 @@ extern int nbTasks;
 void buildLinearSystem(Problem& p, Mesh& m, double alpha, Vector& f)
 {
   if(myRank == 0)
-    printf("== build linear system\n");
+    printf("#== build linear system\n");
   
   p.K.resize(m.nbOfNodes, m.nbOfNodes);
   p.M.resize(m.nbOfNodes, m.nbOfNodes);
@@ -73,7 +73,7 @@ void buildLinearSystem(Problem& p, Mesh& m, double alpha, Vector& f)
 void buildDirichletBC(Problem& p, Mesh& m, Vector& uExa)
 {
   if(myRank == 0)
-    printf("== build Dirichlet BC\n");
+    printf("#== build Dirichlet BC\n");
   
   // Build 'relevement' function and mask (0 = interior node, 1 = boundary node)
   Vector g(m.nbOfNodes);

@@ -10,12 +10,12 @@ extern int nbTasks;
 void readMsh(Mesh& m, string fileName)
 {
   if(myRank == 0)
-    printf("== read mesh file\n");
+    printf("#== read mesh file\n");
   
   // Open mesh file
   ifstream meshfile(fileName.c_str());
   if(!meshfile){
-    printf("ERROR: Mesh '%s' not opened.\n", fileName.c_str());
+    printf("#ERROR: Mesh '%s' not opened.\n", fileName.c_str());
     exit(EXIT_FAILURE);
   }
   
@@ -85,7 +85,7 @@ void readMsh(Mesh& m, string fileName)
             meshfile >> elemNodes(i,2);
             break;
           default:
-            printf("ERROR: Element type '%i' not supported.\n", elemType(i));
+            printf("#ERROR: Element type '%i' not supported.\n", elemType(i));
             exit(EXIT_FAILURE);
             break;
         }
@@ -124,7 +124,7 @@ void readMsh(Mesh& m, string fileName)
             iTri++;
             break;
           default:
-            printf("ERROR: Element type '%i' not supported.\n", elemType(i));
+            printf("#ERROR: Element type '%i' not supported.\n", elemType(i));
             exit(EXIT_FAILURE);
             break;
         }
@@ -135,9 +135,9 @@ void readMsh(Mesh& m, string fileName)
   meshfile.close();
   
   if(myRank == 0){
-    printf("   -> %i nodes\n", m.nbOfNodes);
-    printf("   -> %i boundary lines\n", m.nbOfLin);
-    printf("   -> %i triangles\n", m.nbOfTri);
+    printf("#   -> %i nodes\n", m.nbOfNodes);
+    printf("#   -> %i boundary lines\n", m.nbOfLin);
+    printf("#   -> %i triangles\n", m.nbOfTri);
   }
 }
 
