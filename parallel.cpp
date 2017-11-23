@@ -10,7 +10,7 @@ extern int nbTasks;
 void buildListsNodesMPI(Mesh& m)
 {
   if(myRank == 0)
-    printf("== buildListsNodesMPI\n");
+    printf("#== buildListsNodesMPI\n");
 
   //==== Build list with the nodes belonging to current MPI process (i.e. interior + interface)
   
@@ -28,7 +28,6 @@ void buildListsNodesMPI(Mesh& m)
       maskNodesPart(n2) = 1;
     }
   }
-  
   m.nodesPart.resize(m.nbOfNodes);
   int count = 0;
   for(int n=0; n<m.nbOfNodes; n++){
@@ -76,7 +75,7 @@ void buildListsNodesMPI(Mesh& m)
         }
       }
       m.numNodesToExch(nTask) = count;
-      printf("   -> task %i send/recv %i nodes with task %i\n", myRank, m.numNodesToExch(nTask), nTask);
+      printf("#   -> task %i send/recv %i nodes with task %i\n", myRank, m.numNodesToExch(nTask), nTask);
     }
   }
   if(m.numNodesToExch.maxCoeff() > 0)
@@ -91,7 +90,7 @@ void buildListsNodesMPI(Mesh& m)
 void buildLocalNumbering(Mesh& m)
 {
   if(myRank == 0)
-    printf("== buildLocalNumbering\n");
+    printf("#== buildLocalNumbering\n");
 
   //==== Local numbering for nodes
   
@@ -215,13 +214,8 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m)
 }
 
 void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
-    
     Vector uErr = (uNum - uExa).cwiseAbs();
     double L2_err_loc = 0;
-    //==== Compute local interior error
-    for (int nPart = 0; nPart < m.numNodesPart; nPart++) {
-        L2_err_loc += pow(uErr(m.nodesPart(nPart)), 2);
-    }
     
     //==== Compute interface error
     int numToExch, nNode;
@@ -231,7 +225,7 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
         for (int nExch = 0; nExch < numToExch; ++nExch) {
             nNode = m.nodesToExch(nTask, nExch);
             if(nTask < myRank) nNodesToComputeAPriori.push_back(nNode);
-            else nNodesToRemove.push_back(nNode);
+            else if(nTask > myRank) nNodesToRemove.push_back(nNode);
         }
     }
     // Computation in O(nlog(n)) (sort + remove all but the 1st elements
@@ -257,14 +251,29 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
 
     for (std::vector<int>::iterator it = nNodesToCompute.begin(); it != nNodesToCompute.end(); ++it) {
         L2_err_loc += pow(uErr(*it), 2);
+        //std::cout << m.coords.row(*it) << " " << myRank << std::endl;
     }
-    
+
+    //==== Compute local interior error
+    for (int nPart = 0; nPart < m.numNodesPart; nPart++) {
+        // Check if the node won't be exchange
+        if (std::find(nNodesToComputeAPriori.begin(), 
+                      nNodesToComputeAPriori.end(), 
+                      m.nodesPart(nPart))           == nNodesToComputeAPriori.end() &&
+            std::find(nNodesToRemove.begin(), 
+                      nNodesToRemove.end(), 
+                      m.nodesPart(nPart))           == nNodesToRemove.end()) {
+            
+            L2_err_loc += pow(uErr(nPart), 2);
+            //std::cout << m.coords.row(m.nodesPart(nPart)) << " " << myRank << std::endl;
+        }
+    }
       
     MPI_Reduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);  
     
     if(myRank == 0){
-        L2_err = sqrt(L2_err)/m.nbOfNodes; 
-        printf("\n== Affichage Erreur \n   -> Erreur L2 : %f\n", L2_err);
+        L2_err = sqrt(L2_err); 
+        printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err);
     }
     
 }

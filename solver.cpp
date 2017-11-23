@@ -10,7 +10,7 @@ extern int nbTasks;
 void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
 {
   if(myRank == 0)
-    printf("== jacobi\n");
+    printf("#== jacobi\n");
   
   // Compute the solver matrices
   Vector Mdiag(A.rows());
@@ -41,14 +41,14 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
     // Update residual and iterator
     if((it % 10) == 0){
       if(myRank == 0)
-        printf("\r   %i %e", it, residuNorm);
+        printf("\n#   %i %e", it, residuNorm);
     }
     it++;
   }
   
   if(myRank == 0){
-    printf("\r   -> final iteration: %i (prescribed max: %i)\n", it, maxit);
-    printf("   -> final residual: %e (prescribed tol: %e)\n", residuNorm, tol);
+    printf("\n#   -> final iteration: %i (prescribed max: %i)\n", it, maxit);
+    printf("#   -> final residual: %e (prescribed tol: %e)\n", residuNorm, tol);
   }
 }
 
