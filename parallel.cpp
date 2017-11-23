@@ -274,6 +274,7 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
     if(myRank == 0){
         L2_err = sqrt(L2_err); 
         printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
+    }
 }
 
 void sendResTo0(double res2) {
