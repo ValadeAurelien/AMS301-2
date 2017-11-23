@@ -58,6 +58,14 @@ struct Problem
   Vector b;     // RHS
 };
 
+
+// Right Hand Term types
+
+enum F_type {
+    CSTE = 0,
+    COSCOS = 1
+};
+
 //================================================================================
 // FUNCTIONS
 //================================================================================
@@ -84,6 +92,12 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m);
 // Compute the local L2 error 
 void computeL2Err(double& L2_err_loc, Vector& uNum, Vector& uExa, Mesh& m);
 
+// Send res to 0
+void sendResTo0(double res2);
+
+// Get and sum res from other procs
+void getAndSumRes(double& res2, Vector& otherRes,
+		  std::vector<MPI_Request>& AllRequests);
 //==== Functions in 'problem.cpp'
 
 // Compute the matrices of the linear system

@@ -1,1 +1,0 @@
-gmsh -2 -clmax 0.025 -clmin 0.025 -part 4 $1 -o ${1%.*}.msh

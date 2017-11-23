@@ -265,6 +265,22 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
     if(myRank == 0){
         L2_err = sqrt(L2_err)/m.nbOfNodes; 
         printf("\n== Affichage Erreur \n   -> Erreur L2 : %f\n", L2_err);
-    }
-    
+    }   
 }
+
+void sendResTo0(double res2) {
+    MPI_Send(&res2, 1, MPI_DOUBLE, 0, 0,
+	     MPI_COMM_WORLD);
+}
+
+void getAndSumRes(double& res2, Vector& otherRes,
+		  std::vector<MPI_Request>& AllRequests) {
+    for (int task=1; task<nbTasks; ++task)
+	MPI_Irecv(&(otherRes(task-1)), 1, MPI_DOUBLE, task, 0,
+		  MPI_COMM_WORLD, &(AllRequests.at(task-1)));
+    for (int task=1; task<nbTasks; ++task) {
+	MPI_Wait(&(AllRequests.at(task-1)), MPI_STATUS_IGNORE);
+	res2 += otherRes(task-1);
+    }
+}
+    
