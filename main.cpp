@@ -7,7 +7,7 @@ int nbTasks;
 int main(int argc, char* argv[]) {
 
     if (argc<11) {
-	cout << "Missing args, got :";
+	cout << "#Missing args, got :";
 	for (int i=0; i<argc; ++i ) cout << " " << argv[i];
 	cout << endl;
 	return EXIT_FAILURE;
@@ -22,8 +22,6 @@ int main(int argc, char* argv[]) {
     char*  outUFile  = argv[8];
     char*  outUeFile = argv[9];
     char*  outEFile  = argv[10];
-    for (int i=0; i<argc; ++i ) cout << " " << argv[i];
-    cout << endl;
 
 // 1. Initialize MPI
     MPI_Init(&argc, &argv);
@@ -34,8 +32,6 @@ int main(int argc, char* argv[]) {
     Mesh m;
     readMsh(m, meshFile);
     buildListsNodesMPI(m);
-    cout << m.nbOfNodes << endl
-	 << m.numNodesPart << endl;
     buildLocalNumbering(m);
     
     // 3. Build problem (fields and system)
