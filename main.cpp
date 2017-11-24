@@ -22,6 +22,9 @@ int main(int argc, char* argv[]) {
     char*  outUFile  = argv[8];
     char*  outUeFile = argv[9];
     char*  outEFile  = argv[10];
+    for (int i=0; i<argc; ++i ) cout << " " << argv[i];
+    cout << endl;
+
 // 1. Initialize MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);

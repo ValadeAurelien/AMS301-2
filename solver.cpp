@@ -28,6 +28,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
   
   // Jacobi solver
   double res2 = 0,
+      res2_tot,
       tol2 = tol*tol;
   int it = 0;
   do {
@@ -40,19 +41,16 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
       u(n) = 1/Mdiag(n) * Nu(n);
     r = b - A*u;
     res2 = pow(r.norm(), 2);
-    
 
+    MPI_Reduce(&res2, &res2_tot, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&res2_tot, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        
     if((it % 10) == 0){
 	if(myRank == 0){
 	    cout << it << " " << res2 << endl;
 	}
     }
 
-    if (myRank)
-	MPI_Reduce(&res2, &res2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    else
-	MPI_Reduce(MPI_IN_PLACE, &res2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-    it++;
   } while (res2 > tol2 && it < maxit);
   
   if(myRank == 0){

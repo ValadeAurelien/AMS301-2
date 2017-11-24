@@ -5,10 +5,10 @@ Wdir=benchmark
 output_file=log
 
 alpha=1
-tol=1e-3
+tol=1e-6
 maxit=1e3
 Ftype=1
-Farg=1
+Farg=2
 meshFile=$Wdir/carre.msh
 outFFile=$Wdir/solF.msh
 outUFile=$Wdir/solNum.msh
