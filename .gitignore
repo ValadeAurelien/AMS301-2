@@ -1,5 +1,8 @@
 *.o
 *~
-solver
 eigen/*
 nbproject/*
+*output*
+*sol*
+*log*
+Build/solver
