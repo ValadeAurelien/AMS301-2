@@ -1,21 +1,26 @@
 #! /bin/sh
 
-nbTasks=2
-Wdir=benchmark
-output_file=log
+nbTasks=1
 
-alpha=0.1
-tol=1e-6
-maxit=1e5
-Ftype=0
+alpha=1
+tol=1.5e-6
+maxit=1e4
+Ftype=1
 Farg=1
+
+NAME=test_$nbTasks
+
+Wdir=benchmark
+outWdir=$Wdir/$NAME
+
 meshFile=$Wdir/carre_64.msh
-outFFileName=$Wdir/solF
-outUFileName=$Wdir/solNum
-outUeFileName=$Wir/solExa
-outEFileName=$Wdir/solErr
+outFFileName=$outWdir/solF
+outUFileName=$outWdir/solNum
+outUeFileName=$outWdir/solExa
+outEFileName=$outWdir/solErr
 
-mkdir 2>/dev/null run_output
-rm 2>/dev/null -f run_output/$output_file
+mkdir 2>/dev/null outputs errors $outWdir
+rm 2>/dev/null outputs/$NAME errors/$NAME $outWdir/*
+cp $meshFile $outWdir
 
-make && mpirun -np $nbTasks --output-filename run_output/$output_file ./solver $alpha $tol $maxit $Ftype $Farg $meshFile $outFFileName $outUFileName $outUeFileName $outEFileName 
+make && mpirun -np $nbTasks --output-filename run_output/$NAME ./solver $alpha $tol $maxit $Ftype $Farg $meshFile $outFFileName $outUFileName $outUeFileName $outEFileName 
