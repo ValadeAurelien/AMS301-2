@@ -9,13 +9,13 @@ tol=1e-6
 maxit=1e3
 Ftype=1
 Farg=2
-meshFile=$Wdir/carre.msh
-outFFile=$Wdir/solF.msh
-outUFile=$Wdir/solNum.msh
-outUeFile=$Wir/solExa.msh
-outEFile=$Wdir/solErr.msh
+meshFile=$Wdir/carre_64.msh
+outFFileName=$Wdir/solF
+outUFileName=$Wdir/solNum
+outUeFileName=$Wir/soleNamexa
+outEFileName=$Wdir/soleNamerr
 
 mkdir 2>/dev/null run_output
 rm 2>/dev/null -f run_output/$output_file
 
-make && mpirun -np $nbTasks --output-filename run_output/$output_file ./solver $alpha $tol $maxit $Ftype $Farg $meshFile $outFFile $outUFile $outUeFile $outEFile 
+make && mpirun -np $nbTasks --output-filename run_output/$output_file ./solver $alpha $tol $maxit $Ftype $Farg $meshFile $outFFileName $outUFileName $outUeFileName $outEFileName 
