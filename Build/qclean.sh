@@ -1,9 +1,10 @@
 #! /bin/sh
 
 jobs=$(qstat | awk 'NR>2 {print $1}' | sed 's/\n/ /g')
-echo Deleting all jobs : $jobs
+echo -e Deleting all jobs : $jobs  (yes/no) ?   
 read confirmation
 
 if [[ $confirmation == 'yes' ]]
-   qdel $jobs
+then
+    qdel $jobs
 fi
