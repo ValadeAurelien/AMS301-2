@@ -14,13 +14,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
   
   // Compute the solver matrices
   Vector Mdiag(A.rows()),
-      r(A.rows()),
-      otherRes;
-  std::vector<MPI_Request> AllRequests;
-  if (!myRank) {
-      otherRes.resize(nbTasks-1);
-      AllRequests.resize(nbTasks-1);
-  }
+      r(A.rows());
   SpMatrix N(A.rows(), A.cols());
   for(int k = 0; k < A.outerSize(); ++k){
     for(SpMatrix::InnerIterator it(A,k); it; ++it){
@@ -53,10 +47,11 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
 	    cout << it << " " << res2 << endl;
 	}
     }
+
     if (myRank)
-	sendResTo0(res2);
+	MPI_Reduce(&res2, &res2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     else
-	getAndSumRes(res2, otherRes, AllRequests);
+	MPI_Reduce(MPI_IN_PLACE, &res2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     it++;
   } while (res2 > tol2 && it < maxit);
   

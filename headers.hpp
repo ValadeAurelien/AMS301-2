@@ -111,9 +111,4 @@ void buildDirichletBC(Problem& p, Mesh& m, Vector& uExa);
 // Solution of the system Au=b with Jacobi
 void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit);
 
-// Res comm functions
-void sendResTo0(double res2);
-
-void getAndSumRes(double& res2, Vector& otherRes,
-		  std::vector<MPI_Request>& AllRequests);
 #endif /* HEADERS_HPP */
