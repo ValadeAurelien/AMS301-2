@@ -1,6 +1,6 @@
 #! /bin/sh
 
-nbTasks=2
+nbTasks=16
 
 alpha=1
 tol=1e-3
@@ -15,7 +15,8 @@ outUFile=$Wdir/solNum.msh
 outUeFile=$Wdir/solExa.msh
 outEFile=$Wdir/solErr.msh
 
-NAME=test
+NAME=test_$nbTasks
+
 ARGS_LIST="-v nbTasks=$nbTasks -v alpha=$alpha -v tol=$tol -v maxit=$maxit -v Ftype=$Ftype -v Farg=$Farg -v Wdir=$Wdir -v meshFile=$meshFile -v outFFile=$outFFile -v outUFile=$outUFile -v outUeFile=$outUeFile -v outEFile=$outEFile"
 
 mkdir 2>/dev/null outputs errors 
