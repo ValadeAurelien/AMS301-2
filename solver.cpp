@@ -53,7 +53,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
     it++;
   } while (res2_tot > tol2 && it < maxit);
   
-  if(myRank == 0){
+  if(myRank == 0){!
     printf("\r#   -> final iteration: %i (prescribed max: %i)\n", it, maxit);
     printf("#   -> final residual: %e (prescribed tol: %e)\n", sqrt(res2), tol);
   }
