@@ -34,8 +34,10 @@ int main(int argc, char* argv[]) {
     Mesh m;
     readMsh(m, meshFile);
     buildListsNodesMPI(m);
+    cout << m.nbOfNodes << endl
+	 << m.numNodesPart << endl;
     buildLocalNumbering(m);
-
+    
     // 3. Build problem (fields and system)
     Vector uNum(m.nbOfNodes);
     Vector uExa(m.nbOfNodes);
@@ -59,6 +61,8 @@ int main(int argc, char* argv[]) {
 	}
     }
 
+    saveToMsh(uNum, m, "solF", outFFile);
+
     Problem p;
     buildLinearSystem(p, m, alpha, f);
     // buildDirichletBC(p,m,uExa); // (Only for the extension of the project)
@@ -72,7 +76,7 @@ int main(int argc, char* argv[]) {
     computeL2Err(L2_err, uNum, uExa, m);
     Vector uErr = (uNum-uExa).cwiseAbs();
 
-    saveToMsh(uNum, m, "solNum", outFFile);
+    saveToMsh(uNum, m, "solF", outFFile);
     saveToMsh(uNum, m, "solNum", outUFile);
     saveToMsh(uExa, m, "solRef", outUeFile);
     saveToMsh(uErr, m, "solErr", outEFile);

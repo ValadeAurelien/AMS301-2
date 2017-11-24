@@ -50,8 +50,8 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
 	    cout << it << " " << res2 << endl;
 	}
     }
-
-  } while (res2 > tol2 && it < maxit);
+    it++;
+  } while (res2_tot > tol2 && it < maxit);
   
   if(myRank == 0){
     printf("\r#   -> final iteration: %i (prescribed max: %i)\n", it, maxit);

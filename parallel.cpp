@@ -10,7 +10,7 @@ extern int nbTasks;
 void buildListsNodesMPI(Mesh& m)
 {
   if(myRank == 0)
-    printf("#== buildListsNodesMPI\n");
+    printf("== buildListsNodesMPI\n");
 
   //==== Build list with the nodes belonging to current MPI process (i.e. interior + interface)
   
@@ -28,6 +28,7 @@ void buildListsNodesMPI(Mesh& m)
       maskNodesPart(n2) = 1;
     }
   }
+  
   m.nodesPart.resize(m.nbOfNodes);
   int count = 0;
   for(int n=0; n<m.nbOfNodes; n++){
@@ -75,7 +76,7 @@ void buildListsNodesMPI(Mesh& m)
         }
       }
       m.numNodesToExch(nTask) = count;
-      printf("#   -> task %i send/recv %i nodes with task %i\n", myRank, m.numNodesToExch(nTask), nTask);
+      printf("   -> task %i send/recv %i nodes with task %i\n", myRank, m.numNodesToExch(nTask), nTask);
     }
   }
   if(m.numNodesToExch.maxCoeff() > 0)
@@ -90,7 +91,7 @@ void buildListsNodesMPI(Mesh& m)
 void buildLocalNumbering(Mesh& m)
 {
   if(myRank == 0)
-    printf("#== buildLocalNumbering\n");
+    printf("== buildLocalNumbering\n");
 
   //==== Local numbering for nodes
   
