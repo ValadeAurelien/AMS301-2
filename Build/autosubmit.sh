@@ -12,8 +12,8 @@ Wdir=benchmark
 meshFile=$Wdir/bigcarre_64.msh
 outFFileName=$Wdir/solF
 outUFileName=$Wdir/solNum
-outUeFileName=$Wir/soleNamexa
-outEFileName=$Wdir/soleNamerr
+outUeFileName=$Wir/solExa
+outEFileName=$Wdir/solErr
 
 
 NAME=test_$nbTasks

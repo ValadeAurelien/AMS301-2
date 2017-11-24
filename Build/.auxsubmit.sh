@@ -1,3 +1,3 @@
 #! /bin/sh
 
-make && mpirun -np $nbTasks ./solver $alpha $tol $maxit $Ftype $Farg $meshFile $outFFile $outUFile $outUeFile $outEFile
+make && mpirun -np $nbTasks ./solver $alpha $tol $maxit $Ftype $Farg $meshFile $outFFileName $outUFileName $outUeFileName $outEFileName
