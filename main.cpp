@@ -44,12 +44,12 @@ int main(int argc, char* argv[]) {
         uNum(i) = 0.;
 	switch (Ftype) {
 	case CSTE : 
-	    uExa(i) = alpha*Farg;
+	    uExa(i) = Farg/alpha;
 	    f(i) = Farg;
 	    break;
 	case COSCOS :
 	    f(i) = cos(M_PI * x) * cos(Farg * M_PI * y);
-	    uExa(i) = (alpha + pow(Farg*M_PI, 2)) * f(i);
+	    uExa(i) = f(i)/(alpha + pow(Farg*M_PI, 2));
 	    break;
 	default :
 	    cout << "Type of F not understood..." << endl;
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
     computeL2Err(L2_err, uNum, uExa, m);
     Vector uErr = (uNum-uExa).cwiseAbs();
 
-    saveToMsh(uNum, m, "solF", outFFile);
+    saveToMsh(f, m, "solF", outFFile);
     saveToMsh(uNum, m, "solNum", outUFile);
     saveToMsh(uExa, m, "solRef", outUeFile);
     saveToMsh(uErr, m, "solErr", outEFile);

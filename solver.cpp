@@ -40,13 +40,12 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
     for(int n=0; n<m.nbOfNodes; n++)
       u(n) = 1/Mdiag(n) * Nu(n);
     r = b - A*u;
-    res2 = pow(r.norm(), 2);
+    res2 = pow(r.norm()/r.rows(), 2);
 
     MPI_Reduce(&res2, &res2_tot, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Bcast(&res2_tot, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    cout << "# " << myRank << " " << res2 << endl;
-    if((it % 10) == 0){
+    if((it % 100) == 0){
 	if(myRank == 0){
 	    cout << it << " " << res2_tot << endl;
 	}
