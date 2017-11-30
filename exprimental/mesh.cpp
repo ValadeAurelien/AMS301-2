@@ -112,7 +112,7 @@ void readMsh(Mesh& m, string fileName)
             m.linNum(iLin) = elemNum(i);
             m.linNodes(iLin,0) = elemNodes(i,0)-1; // (gmsh is 1-index, here is 0-index)
             m.linNodes(iLin,1) = elemNodes(i,1)-1;
-            m.linPart(iLin) = (elemPart(i)-1) % nbTasks; // (gmsh is 1-index, here is 0-index)
+            m.linPart(iLin) = 1 + (elemPart(i)-1) % (nbTasks-1); // (gmsh is 1-index, here is 0-index. Task 0 is for interface only)
             iLin++;
             break;
           case 2:  // triangle
@@ -120,7 +120,7 @@ void readMsh(Mesh& m, string fileName)
             m.triNodes(iTri,0) = elemNodes(i,0)-1;
             m.triNodes(iTri,1) = elemNodes(i,1)-1;
             m.triNodes(iTri,2) = elemNodes(i,2)-1;
-            m.triPart(iTri) = (elemPart(i)-1) % nbTasks; // (gmsh is 1-index, here is 0-index)
+            m.triPart(iTri) = 1 + (elemPart(i)-1) % (nbTasks-1); // (gmsh is 1-index, here is 0-index. Task 0 is for interface only)
             iTri++;
             break;
           default:
@@ -147,9 +147,9 @@ void readMsh(Mesh& m, string fileName)
 
 void saveToMsh(Vector& u, Mesh& m, string name, string fileName)
 {
-  if(nbTasks > 0){
+  if(nbTasks > 1){
     ostringstream ss;
-    ss << fileName << "_" << myRank << ".msh";
+    ss << fileName << "_" << myRank;
     fileName = ss.str();
   }
 
@@ -184,3 +184,4 @@ void saveToMsh(Vector& u, Mesh& m, string name, string fileName)
   posFile << "$EndElementNodeData" << endl;
   posFile.close();
 }
+

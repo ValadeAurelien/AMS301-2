@@ -14,57 +14,77 @@ void buildListsNodesMPI(Mesh& m)
 
   //==== Build list with the nodes belonging to current MPI process (i.e. interior + interface)
   
-  IntVector maskNodesPart(m.nbOfNodes);
-  for(int n=0; n<m.nbOfNodes; n++){
-    maskNodesPart(n) = 0;
-  }
-  for(int iTri=0; iTri<m.nbOfTri; iTri++){
-    if(m.triPart(iTri) == myRank){
-      int n0 = m.triNodes(iTri, 0);
-      int n1 = m.triNodes(iTri, 1);
-      int n2 = m.triNodes(iTri, 2);
-      maskNodesPart(n0) = 1;
-      maskNodesPart(n1) = 1;
-      maskNodesPart(n2) = 1;
-    }
-  }
+  IntVector maskNodesPart;
+  IntMatrix nodesAssignement;
   
-  m.nodesPart.resize(m.nbOfNodes);
-  int count = 0;
-  for(int n=0; n<m.nbOfNodes; n++){
-    if(maskNodesPart(n) == 1){
-      m.nodesPart(count) = n;
-      count++;
+  if(myRank == 0) {
+        nodesAssignement.resize(nbTasks - 1, m.nbOfNodes);
+        m.nodesToExchFrom0.resize(nbTasks - 1, m.nbOfNodes);
+        for (int n = 0; n < m.nbOfNodes; n++) {
+            for (int nTask = 0; nTask < nbTasks - 1; ++nTask) {
+                nodesAssignement(nTask, n) = 0;
+                nodesToExchFrom0(nTask, n) = 0;
+            }
+        }
+    } else {
+        maskNodesPart.resize(m.nbOfNodes);
+        for (int n = 0; n < m.nbOfNodes; n++) {
+            maskNodesPart(n) = 0;
+        }
     }
-  }
-  if(count > 0)
-    m.nodesPart.conservativeResize(count);
-  m.numNodesPart = count;
-  
-  //==== Build list with the nodes belonging to both current & neighboring MPI processes (i.e. interface)
-  
-  IntMatrix maskNodesToExch(nbTasks, m.nbOfNodes);
-  for(int nTask=0; nTask<nbTasks; nTask++){
-    for(int n=0; n<m.nbOfNodes; n++){
-      maskNodesToExch(nTask,n) = 0;
+
+    int n0, n1, n2;
+    for (int iTri = 0; iTri < m.nbOfTri; iTri++) {
+        n0 = m.triNodes(iTri, 0);
+        n1 = m.triNodes(iTri, 1);
+        n2 = m.triNodes(iTri, 2);
+        if (m.triPart(iTri) == myRank) {
+            maskNodesPart(n0) = 1;
+            maskNodesPart(n1) = 1;
+            maskNodesPart(n2) = 1;
+        }else if (myRank == 0) {
+            nodesAssignement(m.triPart(iTri)-1, n0) = 1;
+            nodesAssignement(m.triPart(iTri)-1, n1) = 1;
+            nodesAssignement(m.triPart(iTri)-1, n2) = 1;
+        }
     }
-  }
-  for(int iTri=0; iTri<m.nbOfTri; iTri++){
-    if(m.triPart(iTri) != myRank){
-      int n0 = m.triNodes(iTri, 0);
-      int n1 = m.triNodes(iTri, 1);
-      int n2 = m.triNodes(iTri, 2);
-      if(maskNodesPart(n0) == 1)
-        maskNodesToExch(m.triPart(iTri),n0) = 1;
-      if(maskNodesPart(n1) == 1)
-        maskNodesToExch(m.triPart(iTri),n1) = 1;
-      if(maskNodesPart(n2) == 1)
-        maskNodesToExch(m.triPart(iTri),n2) = 1;
-    }
-  }
+
   
-  m.numNodesToExch.resize(nbTasks);
-  m.nodesToExch.resize(nbTasks,m.nbOfNodes);
+  //==== Build list with the nodes belonging to both current & neighboring MPI processes (i.e. interface),
+  //==== remove these nodes from our part and store it in rank 0
+ 
+  int rankOfTri, count[nbTasks];
+  for(int nTask = 0; nTask < nbTasks; ++nTask){
+      count[nTask] = 0;
+  }
+    for (int iTri = 0; iTri < m.nbOfTri; iTri++) {
+        rankOfTri = m.triPart(iTri);
+        if (rankOfTri != myRank) {
+            n0 = m.triNodes(iTri, 0);
+            n1 = m.triNodes(iTri, 1);
+            n2 = m.triNodes(iTri, 2);
+            if (myRank == 0) {
+                for (int nTask = 0; nTask < nbTasks; ++nTask) {
+                    if (nTask != rankOfTri) {
+                        if (nodesAssignement(nTask, n0) == 1) {
+                            m.nodesToExchFrom0(nTask, count[nTask]++) = n0;
+                        }
+                        if (nodesAssignement(nTask, n1) == 1) {
+                            m.nodesToExchFrom0(nTask, count[nTask]++) = n1;
+                        }
+                        if (nodesAssignement(nTask, n2) == 1) {
+                            m.nodesToExchFrom0(nTask, count[nTask]++) = n2;
+                        }
+                    }
+                }
+            }
+            if (maskNodesPart(n0) == 1) maskNodesPart(n0) = 0;
+            if (maskNodesPart(n1) == 1) maskNodesPart(n1) = 0;
+            if (maskNodesPart(n2) == 1) maskNodesPart(n2) = 0;
+        }
+    }
+  
+  
   for(int nTask=0; nTask<nbTasks; nTask++){
     m.numNodesToExch(nTask) = 0;
     if(nTask != myRank){
@@ -79,9 +99,20 @@ void buildListsNodesMPI(Mesh& m)
       printf("#   -> task %i send/recv %i nodes with task %i\n", myRank, m.numNodesToExch(nTask), nTask);
     }
   }
+  
   if(m.numNodesToExch.maxCoeff() > 0)
     m.nodesToExch.conservativeResize(nbTasks, m.numNodesToExch.maxCoeff());
-  
+    m.nodesPart.resize(m.nbOfNodes);
+  int count = 0;
+  for(int n=0; n<m.nbOfNodes; n++){
+    if(maskNodesPart(n) == 1){
+      m.nodesPart(count) = n;
+      count++;
+    }
+  }
+  if(count > 0)
+    m.nodesPart.conservativeResize(count);
+  m.numNodesPart = count;
 }
 
 //================================================================================
@@ -214,7 +245,7 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m)
   delete requestRcv;
 }
 
-void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print_type) {
+void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
     Vector uErr = (uNum - uExa).cwiseAbs();
     double L2_err_loc = 0;
     
@@ -233,7 +264,7 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print
     // from every consecutive group of equal elements).
     std::sort(nNodesToComputeAPriori.begin(), nNodesToComputeAPriori.end());
     std::vector<int>::iterator last = std::unique(nNodesToComputeAPriori.begin(),
-						  nNodesToComputeAPriori.end());
+            nNodesToComputeAPriori.end());
     nNodesToComputeAPriori.erase(last, nNodesToComputeAPriori.end());
 
     std::sort(nNodesToRemove.begin(), nNodesToRemove.end());
@@ -244,15 +275,13 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print
     // in nNodesToComputeAPriori).
     std::vector<int> nNodesToCompute;
     std::set_difference(nNodesToComputeAPriori.begin(),
-			nNodesToComputeAPriori.end(),
-			nNodesToRemove.begin(),
-			nNodesToRemove.end(),
-			std::inserter(nNodesToCompute,
-				      nNodesToCompute.begin()));
+            nNodesToComputeAPriori.end(),
+            nNodesToRemove.begin(),
+            nNodesToRemove.end(),
+            std::inserter(nNodesToCompute, nNodesToCompute.begin()));
 
 
-    for (std::vector<int>::iterator it = nNodesToCompute.begin();
-	 it != nNodesToCompute.end(); ++it) {
+    for (std::vector<int>::iterator it = nNodesToCompute.begin(); it != nNodesToCompute.end(); ++it) {
         L2_err_loc += pow(uErr(*it), 2);
         //std::cout << m.coords.row(*it) << " " << myRank << std::endl;
     }
@@ -271,14 +300,12 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print
             //std::cout << m.coords.row(m.nodesPart(nPart)) << " " << myRank << std::endl;
         }
     }
-    cout << "#" << myRank << " " << L2_err_loc << endl;
       
     MPI_Reduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);  
-
-    if(myRank == 0) {
+    
+    if(myRank == 0){
         L2_err = sqrt(L2_err); 
-	if (print_type & PRINT)
-	    printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
+        printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
     }
 }
 
@@ -297,3 +324,5 @@ void getAndSumRes(double& res2, Vector& otherRes,
 	res2 += otherRes(task-1);
     }
 }
+    
+
