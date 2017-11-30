@@ -147,9 +147,9 @@ void readMsh(Mesh& m, string fileName)
 
 void saveToMsh(Vector& u, Mesh& m, string name, string fileName)
 {
-  if(nbTasks > 1){
+  if(nbTasks > 0){
     ostringstream ss;
-    ss << fileName << "_" << myRank;
+    ss << fileName << "_" << myRank << ".msh";
     fileName = ss.str();
   }
 

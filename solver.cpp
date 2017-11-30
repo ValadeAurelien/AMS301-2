@@ -14,13 +14,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
   
   // Compute the solver matrices
   Vector Mdiag(A.rows()),
-      r(A.rows()),
-      otherRes;
-  std::vector<MPI_Request> AllRequests;
-  if (!myRank) {
-      otherRes.resize(nbTasks-1);
-      AllRequests.resize(nbTasks-1);
-  }
+      r(A.rows());
   SpMatrix N(A.rows(), A.cols());
   for(int k = 0; k < A.outerSize(); ++k){
     for(SpMatrix::InnerIterator it(A,k); it; ++it){
@@ -34,6 +28,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
   
   // Jacobi solver
   double res2 = 0,
+      res2_tot,
       tol2 = tol*tol;
   int it = 0;
   do {
@@ -45,24 +40,22 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
     for(int n=0; n<m.nbOfNodes; n++)
       u(n) = 1/Mdiag(n) * Nu(n);
     r = b - A*u;
-    res2 = pow(r.norm(), 2);
-    
+    res2 = pow(r.norm()/r.rows(), 2);
 
-    if((it % 10) == 0){
+    MPI_Reduce(&res2, &res2_tot, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&res2_tot, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    if((it % 100) == 0){
 	if(myRank == 0){
-	    cout << it << " " << res2 << endl;
+	    cout << it << " " << res2_tot << endl;
 	}
     }
-    if (myRank)
-	sendResTo0(res2);
-    else
-	getAndSumRes(res2, otherRes, AllRequests);
     it++;
-  } while (res2 > tol2 && it < maxit);
+  } while (res2_tot > tol2 && it < maxit);
   
-  if(myRank == 0){
-    printf("\r   -> final iteration: %i (prescribed max: %i)\n", it, maxit);
-    printf("   -> final residual: %e (prescribed tol: %e)\n", sqrt(res2), tol);
+  if(myRank == 0){!
+    printf("\r#   -> final iteration: %i (prescribed max: %i)\n", it, maxit);
+    printf("#   -> final residual: %e (prescribed tol: %e)\n", sqrt(res2), tol);
   }
 }
 

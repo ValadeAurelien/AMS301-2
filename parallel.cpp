@@ -28,6 +28,7 @@ void buildListsNodesMPI(Mesh& m)
       maskNodesPart(n2) = 1;
     }
   }
+  
   m.nodesPart.resize(m.nbOfNodes);
   int count = 0;
   for(int n=0; n<m.nbOfNodes; n++){
@@ -292,4 +293,3 @@ void getAndSumRes(double& res2, Vector& otherRes,
 	res2 += otherRes(task-1);
     }
 }
-    

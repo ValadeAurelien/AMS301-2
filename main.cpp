@@ -7,7 +7,7 @@ int nbTasks;
 int main(int argc, char* argv[]) {
 
     if (argc<11) {
-	cout << "Missing args, got :";
+	cout << "#Missing args, got :";
 	for (int i=0; i<argc; ++i ) cout << " " << argv[i];
 	cout << endl;
 	return EXIT_FAILURE;
@@ -22,7 +22,8 @@ int main(int argc, char* argv[]) {
     char*  outUFile  = argv[8];
     char*  outUeFile = argv[9];
     char*  outEFile  = argv[10];
-    // 1. Initialize MPI
+
+// 1. Initialize MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
     MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
@@ -32,7 +33,7 @@ int main(int argc, char* argv[]) {
     readMsh(m, meshFile);
     buildListsNodesMPI(m);
     buildLocalNumbering(m);
-
+    
     // 3. Build problem (fields and system)
     Vector uNum(m.nbOfNodes);
     Vector uExa(m.nbOfNodes);
@@ -43,18 +44,20 @@ int main(int argc, char* argv[]) {
         uNum(i) = 0.;
 	switch (Ftype) {
 	case CSTE : 
-	    uExa(i) = alpha*Farg;
+	    uExa(i) = Farg/alpha;
 	    f(i) = Farg;
 	    break;
 	case COSCOS :
 	    f(i) = cos(M_PI * x) * cos(Farg * M_PI * y);
-	    uExa(i) = (alpha + pow(Farg*M_PI, 2)) * f(i);
+	    uExa(i) = f(i)/(alpha + pow(Farg*M_PI, 2));
 	    break;
 	default :
 	    cout << "Type of F not understood..." << endl;
 	    return EXIT_FAILURE;
 	}
     }
+
+    saveToMsh(uNum, m, "solF", outFFile);
 
     Problem p;
     buildLinearSystem(p, m, alpha, f);
@@ -69,7 +72,7 @@ int main(int argc, char* argv[]) {
     computeL2Err(L2_err, uNum, uExa, m);
     Vector uErr = (uNum-uExa).cwiseAbs();
 
-    saveToMsh(uNum, m, "solNum", outFFile);
+    saveToMsh(f, m, "solF", outFFile);
     saveToMsh(uNum, m, "solNum", outUFile);
     saveToMsh(uExa, m, "solRef", outUeFile);
     saveToMsh(uErr, m, "solErr", outEFile);
