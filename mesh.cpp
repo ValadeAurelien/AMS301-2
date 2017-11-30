@@ -44,7 +44,7 @@ void readMsh(Mesh& m, string fileName)
       // Read the total number of elements
       int nbOfElems;
       meshfile >> nbOfElems;
-      
+
       // Temporary arrays for elements infos/nodes
       IntVector elemNum(nbOfElems);          // gmsh numerbing
       IntVector elemType(nbOfElems);         // type of element

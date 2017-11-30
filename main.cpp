@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     char*  outUFile  = argv[8];
     char*  outUeFile = argv[9];
     char*  outEFile  = argv[10];
-// 1. Initialize MPI
+    // 1. Initialize MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
     MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
