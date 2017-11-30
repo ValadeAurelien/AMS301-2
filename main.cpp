@@ -17,11 +17,12 @@ int main(int argc, char* argv[]) {
     int    maxit     = floor(atof(argv[3]));
     int    Ftype     = atof(argv[4]);
     double Farg      = atof(argv[5]);
-    char*  meshFile  = argv[6];
-    char*  outFFile  = argv[7];
-    char*  outUFile  = argv[8];
-    char*  outUeFile = argv[9];
-    char*  outEFile  = argv[10];
+    int solverType   = atoi(argv[6]);
+    char*  meshFile  = argv[7];
+    char*  outFFile  = argv[8];
+    char*  outUFile  = argv[9];
+    char*  outUeFile = argv[10];
+    char*  outEFile  = argv[11];
 
 // 1. Initialize MPI
     MPI_Init(&argc, &argv);
@@ -32,6 +33,7 @@ int main(int argc, char* argv[]) {
     Mesh m;
     readMsh(m, meshFile);
     buildListsNodesMPI(m);
+    int totNbOfNodes = m.nbOfNodes;
     buildLocalNumbering(m);
     
     // 3. Build problem (fields and system)
@@ -49,7 +51,7 @@ int main(int argc, char* argv[]) {
 	    break;
 	case COSCOS :
 	    f(i) = cos(M_PI * x) * cos(Farg * M_PI * y);
-	    uExa(i) = f(i)/(alpha + pow(Farg*M_PI, 2));
+	    uExa(i) = f(i)/(alpha + (1 + pow(Farg, 2))*M_PI*M_PI);
 	    break;
 	default :
 	    cout << "Type of F not understood..." << endl;
@@ -64,12 +66,21 @@ int main(int argc, char* argv[]) {
     // buildDirichletBC(p,m,uExa); // (Only for the extension of the project)
 
     // 4. Solve problem
-    jacobi(p.A, p.b, uNum, m, tol, maxit);
-
+    switch(solverType) {
+    case JACOBI:
+	jacobi(p.A, p.b, uNum, m, tol, maxit);
+	break;
+    case CONJUGATEGRADIENT:
+	conjugateGradient(p.A, p.b, uNum, m, tol, maxit);
+	break;
+    default:
+	printf("Wrong solver choice...");
+	return -1;
+    }
     // 5. Compute error and export fields
 
     double L2_err;
-    computeL2Err(L2_err, uNum, uExa, m);
+    computeL2Err(L2_err, uNum, uExa, m, PRINT);
     Vector uErr = (uNum-uExa).cwiseAbs();
 
     saveToMsh(f, m, "solF", outFFile);

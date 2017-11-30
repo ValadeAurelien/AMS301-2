@@ -2,6 +2,7 @@
 #define HEADERS_HPP
 
 #include <iostream>
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <fstream>
@@ -41,7 +42,7 @@ struct Mesh
   IntMatrix triNodes;         // nodes to each triangle       (Size: nbOfTri x 2)
   IntVector linPart;          // partition of lines           (Size: nbOfLin)
   IntVector triPart;          // partition of triangles       (Size: nbOfTri)
-  
+
   // Infos for parallel computations
   int       numNodesPart;     // number of nodes belonging to the local part
   IntVector nodesPart;        // list of nodes belonging to the local part                                         (Size: numNodesPart )
@@ -64,6 +65,16 @@ struct Problem
 enum F_type {
     CSTE = 0,
     COSCOS = 1
+};
+
+enum Print_type {
+    PRINT = 1,
+    NO_PRINT = 2
+};
+
+enum Solver_type {
+    JACOBI = 0,
+    CONJUGATEGRADIENT = 1
 };
 
 //================================================================================
@@ -90,7 +101,7 @@ void buildLocalNumbering(Mesh& m);
 void exchangeAddInterfMPI(Vector& vec, Mesh& m);
 
 // Compute the local L2 error 
-void computeL2Err(double& L2_err_loc, Vector& uNum, Vector& uExa, Mesh& m);
+void computeL2Err(double& L2_err_loc, Vector& uNum, Vector& uExa, Mesh& m, int print_types);
 
 // Send res to 0
 void sendResTo0(double res2);
@@ -110,5 +121,5 @@ void buildDirichletBC(Problem& p, Mesh& m, Vector& uExa);
 
 // Solution of the system Au=b with Jacobi
 void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit);
-
+void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit);
 #endif /* HEADERS_HPP */

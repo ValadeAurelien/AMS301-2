@@ -3,8 +3,8 @@
 nbTasks=16
 
 alpha=1
-tol=1e-3
-maxit=1e3
+tol=1e-6
+maxit=1e6
 Ftype=1
 Farg=1
 
@@ -24,4 +24,6 @@ ARGS_LIST="-v nbTasks=$nbTasks -v alpha=$alpha -v tol=$tol -v maxit=$maxit -v Ft
 
 mkdir 2>/dev/null outputs errors $outWdir
 rm 2>/dev/null outputs/$NAME errors/$NAME $outWdir/*
+cp $meshFile $outWdir
+
 qsub -N $NAME -o outputs/$NAME -e errors/$NAME -cwd -pe orte $nbTasks $ARGS_LIST ./.auxsubmit.sh

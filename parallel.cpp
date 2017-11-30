@@ -214,7 +214,7 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m)
   delete requestRcv;
 }
 
-void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
+void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print_type) {
     Vector uErr = (uNum - uExa).cwiseAbs();
     double L2_err_loc = 0;
     
@@ -233,7 +233,7 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
     // from every consecutive group of equal elements).
     std::sort(nNodesToComputeAPriori.begin(), nNodesToComputeAPriori.end());
     std::vector<int>::iterator last = std::unique(nNodesToComputeAPriori.begin(),
-            nNodesToComputeAPriori.end());
+						  nNodesToComputeAPriori.end());
     nNodesToComputeAPriori.erase(last, nNodesToComputeAPriori.end());
 
     std::sort(nNodesToRemove.begin(), nNodesToRemove.end());
@@ -244,13 +244,15 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
     // in nNodesToComputeAPriori).
     std::vector<int> nNodesToCompute;
     std::set_difference(nNodesToComputeAPriori.begin(),
-            nNodesToComputeAPriori.end(),
-            nNodesToRemove.begin(),
-            nNodesToRemove.end(),
-            std::inserter(nNodesToCompute, nNodesToCompute.begin()));
+			nNodesToComputeAPriori.end(),
+			nNodesToRemove.begin(),
+			nNodesToRemove.end(),
+			std::inserter(nNodesToCompute,
+				      nNodesToCompute.begin()));
 
 
-    for (std::vector<int>::iterator it = nNodesToCompute.begin(); it != nNodesToCompute.end(); ++it) {
+    for (std::vector<int>::iterator it = nNodesToCompute.begin();
+	 it != nNodesToCompute.end(); ++it) {
         L2_err_loc += pow(uErr(*it), 2);
         //std::cout << m.coords.row(*it) << " " << myRank << std::endl;
     }
@@ -269,11 +271,13 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m) {
             //std::cout << m.coords.row(m.nodesPart(nPart)) << " " << myRank << std::endl;
         }
     }
+    cout << "#" << myRank << " " << L2_err_loc << endl;
       
     MPI_Reduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);  
-    
-    if(myRank == 0){
+
+    if(myRank == 0) {
         L2_err = sqrt(L2_err); 
-        printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
+	if (print_type & PRINT)
+	    printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
     }
 }

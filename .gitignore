@@ -3,7 +3,7 @@
 eigen/*
 nbproject/*
 *output*
-*sol*
+Build/benchmark/*
 *log*
 Build/solver
 Projet-svg/
