@@ -103,13 +103,14 @@ void buildLocalNumbering(Mesh& m)
     int nGlo = m.nodesPart(nLoc);
     localNumNodes(nGlo) = nLoc;
   }
-  
   //==== Re-numbering, from nLoc to nGlo
-  
+  m.nodesToCompute = Matrix::Ones(m.nbOfNodes, 1);
   for(int nTask=0; nTask<nbTasks; nTask++){
     for(int n=0; n<m.numNodesToExch(nTask); n++){
       int nGlo = m.nodesToExch(nTask,n);
       m.nodesToExch(nTask,n) = localNumNodes(nGlo);
+      m.nodesToCompute(nGlo) = (myRank > nTask);
+      //if(myRank > nTask) std::cout << "Num noeud loc to compute " << nGlo  <<endl;
     }
   }
   
@@ -155,6 +156,7 @@ void buildLocalNumbering(Mesh& m)
   triNumMyRank.conservativeResize(nTriLoc);
   linNodesMyRank.conservativeResize(nLinLoc,2);
   triNodesMyRank.conservativeResize(nTriLoc,3);
+  m.nodesToCompute.conservativeResize(nNodeLoc);
   
   m.nbOfNodes = nNodeLoc;
   m.nbOfLin = nLinLoc;
@@ -165,7 +167,10 @@ void buildLocalNumbering(Mesh& m)
   m.linNodes = linNodesMyRank;
   m.triNum = triNumMyRank;
   m.triNodes = triNodesMyRank;
+  
 }
+
+
 
 //================================================================================
 // MPI-parallel exchange/add the interface terms
@@ -215,64 +220,16 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m)
 }
 
 void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print_type) {
-    Vector uErr = (uNum - uExa).cwiseAbs();
+    Vector uErr = (uNum - uExa).cwiseAbs(),
+            tmp = uErr.cwiseProduct(m.nodesToCompute);   
     double L2_err_loc = 0;
+    //MPI_Barrier(MPI_COMM_WORLD); sleep(3*myRank);
+    cout << "-----" << myRank << endl;
+ 
+    L2_err_loc += pow(uErr.cwiseProduct(m.nodesToCompute).norm(), 2);
+
+    cout << "ERR L2 " << L2_err_loc << endl << endl << endl;
     
-    //==== Compute interface error
-    int numToExch, nNode;
-    std::vector<int> nNodesToComputeAPriori, nNodesToRemove;
-    for (int nTask = 0; nTask < nbTasks; ++nTask) {
-        numToExch = m.numNodesToExch(nTask);
-        for (int nExch = 0; nExch < numToExch; ++nExch) {
-            nNode = m.nodesToExch(nTask, nExch);
-            if(nTask < myRank) nNodesToComputeAPriori.push_back(nNode);
-            else if(nTask > myRank) nNodesToRemove.push_back(nNode);
-        }
-    }
-    // Computation in O(nlog(n)) (sort + remove all but the 1st elements
-    // from every consecutive group of equal elements).
-    std::sort(nNodesToComputeAPriori.begin(), nNodesToComputeAPriori.end());
-    std::vector<int>::iterator last = std::unique(nNodesToComputeAPriori.begin(),
-						  nNodesToComputeAPriori.end());
-    nNodesToComputeAPriori.erase(last, nNodesToComputeAPriori.end());
-
-    std::sort(nNodesToRemove.begin(), nNodesToRemove.end());
-    last = std::unique(nNodesToRemove.begin(), nNodesToRemove.end());
-    nNodesToRemove.erase(last, nNodesToRemove.end());
-
-    // Computation in O(n) (remove element present both in nNodesToRemove and 
-    // in nNodesToComputeAPriori).
-    std::vector<int> nNodesToCompute;
-    std::set_difference(nNodesToComputeAPriori.begin(),
-			nNodesToComputeAPriori.end(),
-			nNodesToRemove.begin(),
-			nNodesToRemove.end(),
-			std::inserter(nNodesToCompute,
-				      nNodesToCompute.begin()));
-
-
-    for (std::vector<int>::iterator it = nNodesToCompute.begin();
-	 it != nNodesToCompute.end(); ++it) {
-        L2_err_loc += pow(uErr(*it), 2);
-        //std::cout << m.coords.row(*it) << " " << myRank << std::endl;
-    }
-
-    //==== Compute local interior error
-    for (int nPart = 0; nPart < m.numNodesPart; nPart++) {
-        // Check if the node won't be exchange
-        if (std::find(nNodesToComputeAPriori.begin(), 
-                      nNodesToComputeAPriori.end(), 
-                      m.nodesPart(nPart))           == nNodesToComputeAPriori.end() &&
-            std::find(nNodesToRemove.begin(), 
-                      nNodesToRemove.end(), 
-                      m.nodesPart(nPart))           == nNodesToRemove.end()) {
-            
-            L2_err_loc += pow(uErr(nPart), 2);
-            //std::cout << m.coords.row(m.nodesPart(nPart)) << " " << myRank << std::endl;
-        }
-    }
-    cout << "#" << myRank << " " << L2_err_loc << endl;
-      
     MPI_Reduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);  
 
     if(myRank == 0) {
