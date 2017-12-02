@@ -4,6 +4,8 @@ eigen/*
 nbproject/*
 *output*
 Build/benchmark/*
+!Build/benchmark/*.geo
+!Build/benchmark/*.sh
 *log*
 Build/solver
 Projet-svg/

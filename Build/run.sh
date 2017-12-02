@@ -2,10 +2,10 @@
 
 nbTasks=2
 
-alpha=0.001
+alpha=1
 tol=1e-9
-maxit=1e5
-Ftype=1
+maxit=3
+Ftype=0
 Farg=1
 solverType=1
 
@@ -14,7 +14,7 @@ NAME=test_$nbTasks
 Wdir=benchmark
 outWdir=$Wdir/$NAME
 
-meshFile=$Wdir/smallcarre_64.msh
+meshFile=$Wdir/carre_64.msh
 outFFileName=$outWdir/solF
 outUFileName=$outWdir/solNum
 outUeFileName=$outWdir/solExa

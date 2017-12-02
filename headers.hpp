@@ -1,6 +1,7 @@
 #ifndef HEADERS_HPP
 #define HEADERS_HPP
 
+#include <unistd.h>
 #include <iostream>
 #include <iostream>
 #include <vector>

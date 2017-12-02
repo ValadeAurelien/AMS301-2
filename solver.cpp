@@ -96,7 +96,10 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	beta = res2 / res2old;
 	p = r + beta * p;
 
+	
 	MPI_Barrier(MPI_COMM_WORLD);
+	sleep(myRank*2);
+	cout << "#max coef : " << myRank << " " << pow(r.norm(), 2) << endl;
 	if (nbTasks>1)
 	    computeL2Err(res_tot, r, nul, m, NO_PRINT);
 	else
