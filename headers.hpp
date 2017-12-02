@@ -3,12 +3,13 @@
 
 #include <unistd.h>
 #include <iostream>
-#include <iostream>
+#include <iomanip>
 #include <vector>
 #include <algorithm>
 #include <fstream>
 #include <Eigen/Eigen>
 #include <mpi.h>
+#include <unistd.h>
 using namespace std;
 
 //================================================================================
@@ -49,6 +50,7 @@ struct Mesh
   IntVector nodesPart;        // list of nodes belonging to the local part                                         (Size: numNodesPart )
   IntVector numNodesToExch;   // number of nodal values to exchanges between the current proc and each other proc  (Size: nbTasks)
   IntMatrix nodesToExch;      // list of nodal values to exchanges between the current proc and each other proc    (Size: nbTasks x max(numNodesToExch) )
+  Vector nodesToCompute;      // list of nodal values to compute for L2 error
 };
 
 // Stucture for problem

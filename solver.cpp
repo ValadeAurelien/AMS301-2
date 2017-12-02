@@ -15,7 +15,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
     // Compute the solver matrices
     Vector Mdiag(A.rows()),
 	r(A.rows()),
-	nul(A.rows());
+	nul = Matrix::Zero(A.rows(), 1);
     SpMatrix N(A.rows(), A.cols());
     for(int k = 0; k < A.outerSize(); ++k){
 	for(SpMatrix::InnerIterator it(A,k); it; ++it){
@@ -70,7 +70,7 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	p(A.rows()),
 	Au(A.rows()),
 	Ap(A.rows()),
-	nul(A.rows());
+	nul = Matrix::Zero(A.rows(), 1);
     Au = A*u;
     exchangeAddInterfMPI(Au, m);
     r = b - Au; p = r; rold = r;
