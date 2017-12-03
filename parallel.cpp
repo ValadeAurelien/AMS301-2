@@ -103,17 +103,18 @@ void buildLocalNumbering(Mesh& m)
     int nGlo = m.nodesPart(nLoc);
     localNumNodes(nGlo) = nLoc;
   }
-  //==== Re-numbering, from nLoc to nGlo
-  m.nodesToCompute = Matrix::Ones(m.nbOfNodes, 1);
-  for(int nTask=0; nTask<nbTasks; nTask++){
-    for(int n=0; n<m.numNodesToExch(nTask); n++){
-      int nGlo = m.nodesToExch(nTask,n);
-      m.nodesToExch(nTask,n) = localNumNodes(nGlo);
-      m.nodesToCompute(nGlo) = (myRank > nTask);
-      //if(myRank > nTask) std::cout << "Num noeud loc to compute " << nGlo  <<endl;
+  //==== Re-numbering, from nLoc to nGlo and 
+  //     build local mask of nodes to compute (for L2 error)
+    m.nodesToCompute.resize(m.numNodesPart, 1);
+    for(int i = 0; i < m.numNodesPart; ++i)
+        m.nodesToCompute(i) = 1;
+    for (int nTask = 0; nTask < nbTasks; nTask++) {
+        for (int n = 0; n < m.numNodesToExch(nTask); n++) {
+            int nGlo = m.nodesToExch(nTask, n);
+            m.nodesToExch(nTask, n) = localNumNodes(nGlo);
+            if (nTask > myRank) m.nodesToCompute(localNumNodes(nGlo)) = 0;
+        }
     }
-  }
-  
   //==== Build local arrays for nodes/lines/triangles
   
   Matrix    coordsMyRank(m.nbOfNodes,3);
@@ -156,7 +157,6 @@ void buildLocalNumbering(Mesh& m)
   triNumMyRank.conservativeResize(nTriLoc);
   linNodesMyRank.conservativeResize(nLinLoc,2);
   triNodesMyRank.conservativeResize(nTriLoc,3);
-  m.nodesToCompute.conservativeResize(nNodeLoc);
   
   m.nbOfNodes = nNodeLoc;
   m.nbOfLin = nLinLoc;
@@ -220,20 +220,15 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m)
 }
 
 void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print_type) {
-    Vector uErr = (uNum - uExa).cwiseAbs(),
-            tmp = uErr.cwiseProduct(m.nodesToCompute);   
-    double L2_err_loc = 0;
-    //MPI_Barrier(MPI_COMM_WORLD); sleep(3*myRank);
-    cout << "-----" << myRank << endl;
- 
-    L2_err_loc += pow(uErr.cwiseProduct(m.nodesToCompute).norm(), 2);
-
-    cout << "ERR L2 " << L2_err_loc << endl << endl << endl;
+    Vector uErr = (uNum - uExa).cwiseAbs();
+    double L2_err_loc = 0; 
+    L2_err_loc = pow(uErr.cwiseProduct(m.nodesToCompute).norm(), 2);
+    L2_err = 0;
     
-    MPI_Reduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);  
-
+    MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);  
+    
+    L2_err = sqrt(L2_err);
     if(myRank == 0) {
-        L2_err = sqrt(L2_err); 
 	if (print_type & PRINT)
 	    printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
     }

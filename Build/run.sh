@@ -4,8 +4,8 @@ nbTasks=2
 
 alpha=1
 tol=1e-9
-maxit=3
-Ftype=0
+maxit=1e5
+Ftype=1
 Farg=1
 solverType=1
 
