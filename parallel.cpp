@@ -95,26 +95,28 @@ void buildLocalNumbering(Mesh& m)
 
     //==== Local numbering for nodes
   
-    IntVector localNumNodes(m.nbOfNodes);
-    for(int n=0; n<m.nbOfNodes; n++){
-	localNumNodes(n) = -1;
+
+  IntVector localNumNodes(m.nbOfNodes);
+  for(int n=0; n<m.nbOfNodes; n++){
+    localNumNodes(n) = -1;
+  }
+  for(int nLoc=0; nLoc<m.numNodesPart; nLoc++){
+    int nGlo = m.nodesPart(nLoc);
+    localNumNodes(nGlo) = nLoc;
+  }
+  //==== Re-numbering, from nLoc to nGlo and 
+  //     build local mask of nodes to compute (for L2 error)
+    m.nodesToCompute.resize(m.numNodesPart, 1);
+    for(int i = 0; i < m.numNodesPart; ++i)
+        m.nodesToCompute(i) = 1;
+    for (int nTask = 0; nTask < nbTasks; nTask++) {
+        for (int n = 0; n < m.numNodesToExch(nTask); n++) {
+            int nGlo = m.nodesToExch(nTask, n);
+            m.nodesToExch(nTask, n) = localNumNodes(nGlo);
+            if (nTask > myRank) m.nodesToCompute(localNumNodes(nGlo)) = 0;
+        }
     }
-    for(int nLoc=0; nLoc<m.numNodesPart; nLoc++){
-	int nGlo = m.nodesPart(nLoc);
-	localNumNodes(nGlo) = nLoc;
-    }
-    //==== Re-numbering, from nLoc to nGlo
-    m.nodesToCompute = Matrix::Ones(m.nbOfNodes, 1);
-    for(int nTask=0; nTask<nbTasks; nTask++){
-	for(int n=0; n<m.numNodesToExch(nTask); n++){
-	    int nGlo = m.nodesToExch(nTask,n);
-	    m.nodesToExch(nTask,n) = localNumNodes(nGlo);
-	    m.nodesToCompute(nGlo) = (myRank > nTask);
-	    //if(myRank > nTask) std::cout << "Num noeud loc to compute " << nGlo  <<endl;
-	}
-    }
-  
-    //==== Build local arrays for nodes/lines/triangles
+  //==== Build local arrays for nodes/lines/triangles
   
     Matrix    coordsMyRank(m.nbOfNodes,3);
     IntVector linNumMyRank(m.nbOfLin);
@@ -151,12 +153,11 @@ void buildLocalNumbering(Mesh& m)
 	}
     }
   
-    coordsMyRank.conservativeResize(nNodeLoc,3);
-    linNumMyRank.conservativeResize(nLinLoc);
-    triNumMyRank.conservativeResize(nTriLoc);
-    linNodesMyRank.conservativeResize(nLinLoc,2);
-    triNodesMyRank.conservativeResize(nTriLoc,3);
-    m.nodesToCompute.conservativeResize(nNodeLoc);
+  coordsMyRank.conservativeResize(nNodeLoc,3);
+  linNumMyRank.conservativeResize(nLinLoc);
+  triNumMyRank.conservativeResize(nTriLoc);
+  linNodesMyRank.conservativeResize(nLinLoc,2);
+  triNodesMyRank.conservativeResize(nTriLoc,3);
   
     m.nbOfNodes = nNodeLoc;
     m.nbOfLin = nLinLoc;
@@ -220,26 +221,16 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m)
 }
 
 void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print_type) {
-    Vector uErr = (uNum - uExa).cwiseAbs(),
-	tmp = uErr.cwiseProduct(m.nodesToCompute);   
-    MPI_Barrier(MPI_COMM_WORLD); sleep(myRank);
-    // if (myRank==0)
-    // 	for (int i=0; i<uNum.rows(); ++i) {
-    // 	    cout << setw(15) << uErr(i)
-    // 		 << setw(15) << m.nodesToCompute(i)
-    // 		 << setw(15) << tmp(i)
-    // 		 << endl;
-    // 	}
-    cout << "-----" << myRank << endl;
- 
+    Vector uErr = (uNum - uExa).cwiseAbs();
     double L2_err_loc = pow(uErr.cwiseProduct(m.nodesToCompute).norm(), 2);
-
+    L2_err = 0;
+    cout << "-----" << myRank << endl;
     cout << "ERR L2 " << L2_err_loc << endl << endl << endl;
     
-    MPI_Reduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);  
-
+    MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);  
+    
+    L2_err = sqrt(L2_err);
     if(myRank == 0) {
-        L2_err = sqrt(L2_err); 
 	if (print_type & PRINT)
 	    printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
     }

@@ -28,7 +28,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
     exchangeAddInterfMPI(Mdiag, m);
   
     // Jacobi solver
-    double res_tot;
+    double res_tot = 0;
     int it = 0;
     do {
 	// Compute N*u
@@ -38,8 +38,12 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
 	// Update field
 	for(int n=0; n<m.nbOfNodes; n++)
 	    u(n) = 1/Mdiag(n) * Nu(n);
-
+        
 	r = b - A*u;
+        /*if(myRank == 1)
+            cout << "norme = " << r.norm() << endl;
+        sleep(myRank*3);*/
+
 	if (nbTasks>1)
 	    computeL2Err(res_tot, r, nul, m, NO_PRINT);
 	else
@@ -77,7 +81,7 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
     // Jacobi solver
     double res2 = 0,
 	res2old = 0,
-	res_tot,
+	res_tot = 0,
 	alpha, beta;
     int it = 0;
     do {
@@ -85,7 +89,6 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	
 	Ap = A*p;
 	exchangeAddInterfMPI(Ap, m);
-
 	alpha =  res2 / ( p.transpose()*Ap );
 	u += alpha * p;
 	
@@ -96,15 +99,11 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	beta = res2 / res2old;
 	p = r + beta * p;
 
-	
-	MPI_Barrier(MPI_COMM_WORLD);
-	sleep(myRank*2);
 	cout << "#max coef : " << myRank << " " << pow(r.norm(), 2) << endl;
 	if (nbTasks>1)
 	    computeL2Err(res_tot, r, nul, m, NO_PRINT);
 	else
 	    res_tot = sqrt(res2);
-	
 	if((it % 10) == 0){
 	    if(myRank == 0){
 		printf("it %6.d res %.15f\n", it, res_tot);
