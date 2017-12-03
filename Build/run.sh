@@ -4,10 +4,11 @@ nbTasks=2
 
 alpha=1
 tol=1e-9
-maxit=3
+maxit=2
+
 Ftype=0
 Farg=1
-solverType=1
+solverType=0
 
 NAME=test_$nbTasks
 
