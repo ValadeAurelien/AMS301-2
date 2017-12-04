@@ -226,7 +226,7 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print
     L2_err = 0;
     cout << "-----" << myRank << endl;
     cout << "ERR L2 " << L2_err_loc << endl << endl << endl;
-    
+    saveToMsh(uNum, m, "test", "benchmark/test");
     MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);  
     
     L2_err = sqrt(L2_err);
