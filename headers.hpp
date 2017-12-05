@@ -103,8 +103,9 @@ void buildLocalNumbering(Mesh& m);
 // MPI-parallel exchange/add the interface terms
 void exchangeAddInterfMPI(Vector& vec, Mesh& m);
 
-// Compute the local L2 error 
-void computeL2Err(double& L2_err_loc, Vector& uNum, Vector& uExa, Mesh& m, int print_types);
+// Compute the local L2 error
+void computeL2Norm(double& L2_err, const Vector& uNum, const Mesh& m, int print_type);
+void computeL2Err(double& L2_err_loc, const Vector& uNum, const Vector& uExa, const Mesh& m, int print_types);
 
 // Send res to 0
 void sendResTo0(double res2);

@@ -220,15 +220,13 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m)
     delete requestRcv;
 }
 
-void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print_type) {
-    Vector uErr = (uNum - uExa).cwiseAbs();
-    double L2_err_loc = pow(uErr.cwiseProduct(m.nodesToCompute).norm(), 2);
+void computeL2Norm(double& L2_err, const Vector& uNum, const Mesh& m, int print_type) {
+    double L2_err_loc = pow(uNum.cwiseProduct(m.nodesToCompute).norm(), 2);
     L2_err = 0;
-    cout << "-----" << myRank << endl;
-    cout << "ERR L2 " << L2_err_loc << endl << endl << endl;
-    saveToMsh(uNum, m, "test", "benchmark/test");
-    MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);  
-    
+    if (nbTasks>1)
+	MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    else
+	L2_err = L2_err_loc;
     L2_err = sqrt(L2_err);
     if(myRank == 0) {
 	if (print_type & PRINT)
@@ -236,18 +234,25 @@ void computeL2Err(double& L2_err, Vector& uNum, Vector& uExa, Mesh& m, int print
     }
 }
 
-void sendResTo0(double res2) {
-    MPI_Send(&res2, 1, MPI_DOUBLE, 0, 0,
-	     MPI_COMM_WORLD);
-}
-
-void getAndSumRes(double& res2, Vector& otherRes,
-		  std::vector<MPI_Request>& AllRequests) {
-    for (int task=1; task<nbTasks; ++task)
-	MPI_Irecv(&(otherRes(task-1)), 1, MPI_DOUBLE, task, 0,
-		  MPI_COMM_WORLD, &(AllRequests.at(task-1)));
-    for (int task=1; task<nbTasks; ++task) {
-	MPI_Wait(&(AllRequests.at(task-1)), MPI_STATUS_IGNORE);
-	res2 += otherRes(task-1);
+void computeL2Err(double& L2_err, const Vector& uNum, const Vector& uExa, const Mesh& m, int print_type) {
+    Vector uErr = (uNum - uExa).cwiseAbs();
+    double L2_err_loc = pow(uErr.cwiseProduct(m.nodesToCompute).norm(), 2);
+    L2_err = 0;
+    if (nbTasks>1)
+	MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    else
+	L2_err = L2_err_loc;
+    L2_err = sqrt(L2_err);
+    if(myRank == 0) {
+	if (print_type & PRINT)
+	    printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
     }
 }
+
+
+
+    // cout << "-----" << myRank << endl;
+    // cout << "ERR L2 " << L2_err_loc << endl << endl << endl;
+    // char name [254];
+    // sprintf(name, "benchmark/test_res/m_%i", print_type);
+    // saveToMsh(uNum, m, "test", name); 
