@@ -7,6 +7,7 @@ tol=1e-6
 maxit=1e6
 Ftype=1
 Farg=1
+solverType=0
 
 NAME=test_$nbTasks
 
@@ -20,7 +21,7 @@ outUeFileName=$outWdir/solExa
 outEFileName=$outWdir/solErr
 
 
-ARGS_LIST="-v nbTasks=$nbTasks -v alpha=$alpha -v tol=$tol -v maxit=$maxit -v Ftype=$Ftype -v Farg=$Farg -v Wdir=$Wdir -v meshFile=$meshFile -v outFFileName=$outFFileName -v outUFileName=$outUFileName -v outUeFileName=$outUeFileName -v outEFileName=$outEFileName"
+ARGS_LIST="-v nbTasks=$nbTasks -v alpha=$alpha -v tol=$tol -v maxit=$maxit -v Ftype=$Ftype -v Farg=$Farg -v Wdir=$Wdir -v meshFile=$meshFile -v outFFileName=$outFFileName -v outUFileName=$outUFileName -v outUeFileName=$outUeFileName -v outEFileName=$outEFileName -v solverType=$solverType"
 
 mkdir 2>/dev/null outputs errors $outWdir
 rm 2>/dev/null outputs/$NAME errors/$NAME $outWdir/*
