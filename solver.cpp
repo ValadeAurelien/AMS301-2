@@ -76,7 +76,6 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	p(A.rows()),
 	Au(A.rows()),
 	Ap(A.rows());
-    const Vector nul = Matrix::Zero(A.rows(), 1);
 
     double res = 0,
 	res2 = 0,
@@ -97,8 +96,8 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	u += alpha * p;
 	
 	// cout << "a " << myRank << " " << alpha << endl;
-	computeL2Norm(res_tot, u, m, NO_PRINT);
-	cout << "u " << myRank << " " << res_tot << endl;
+	// computeL2Norm(res_tot, u, m, NO_PRINT);
+	// cout << "u " << myRank << " " << res_tot << endl;
 	res2_old = res2;
 	r -= alpha*Ap;
 	res2 = r.dot(r);
@@ -107,12 +106,12 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	p = r + beta * p;
 
 	computeL2Norm(res_tot, r, m, NO_PRINT);
-	if((it % 1) == 0) {
+	if((it % 10) == 0) {
 	    // printf("loc %i %i %f\n", myRank, it, r.norm());
-	    if (myRank==0) printf("glob -1 %i %f\n", it, res_tot);
-	    // if(myRank == 0){
-	    // 	printf("it %6.d res %.15f\n", it, res_tot); 
-	    // }
+	    // if (myRank==0) printf("glob -1 %i %f\n", it, res_tot);
+	    if(myRank == 0){
+	    	printf("it %6.d res %.15f\n", it, res_tot); 
+	    }
 	}
 	it++;
     } while (res_tot > tol && it < maxit);
