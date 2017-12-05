@@ -12,19 +12,20 @@ int main(int argc, char* argv[]) {
 	cout << endl;
 	return EXIT_FAILURE;
     }
-    double alpha     = atof(argv[1]);
-    double tol       = atof(argv[2]);
-    int    maxit     = floor(atof(argv[3]));
-    int    Ftype     = atof(argv[4]);
-    double Farg      = atof(argv[5]);
-    int solverType   = atoi(argv[6]);
-    char*  meshFile  = argv[7];
-    char*  outFFile  = argv[8];
-    char*  outUFile  = argv[9];
-    char*  outUeFile = argv[10];
-    char*  outEFile  = argv[11];
+    double	alpha	   = atof(argv[1]);
+    double	tol	   = atof(argv[2]);
+    int		maxit	   = floor(atof(argv[3]));
+    int		Ftype	   = atof(argv[4]);
+    double	Farg	   = atof(argv[5]);
+    int		solverType = atoi(argv[6]);
+    char*	meshFile   = argv[7];
+    char*	outFFile   = argv[8];
+    char*	outUFile   = argv[9];
+    char*	outUeFile  = argv[10];
+    char*	outEFile   = argv[11];
 
-// 1. Initialize MPI
+    // 1. Initialize MPI
+    clock_t c0 = clock();
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
     MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
@@ -82,7 +83,8 @@ int main(int argc, char* argv[]) {
     double L2_err;
     computeL2Err(L2_err, uNum, uExa, m, PRINT);
     Vector uErr = (uNum-uExa).cwiseAbs();
-
+    if (!myRank)
+	cout << "#time " << ((double) clock() - c0)/CLOCKS_PER_SEC << endl;
     saveToMsh(f, m, "solF", outFFile);
     saveToMsh(uNum, m, "solNum", outUFile);
     saveToMsh(uExa, m, "solRef", outUeFile);
