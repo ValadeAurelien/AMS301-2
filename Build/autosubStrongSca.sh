@@ -16,7 +16,7 @@ NAME=StrongSca_${nbTasksMin}_${nbTasksStep}_${nbTasksMax}
 Wdir=benchmark
 outWdir=$Wdir/$NAME
 
-meshFile=$Wdir/mshs/bigcarre_64.msh
+meshFile=$Wdir/mshs/(bigcarre_64.msh
 outFFileName=$outWdir/solF
 outUFileName=$outWdir/solNum
 outUeFileName=$outWdir/solExa
