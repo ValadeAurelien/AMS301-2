@@ -18,7 +18,7 @@ function printAndDo {
     make && (mpirun -np $1 ./solver $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13}) #> log
 }
 
-nbTasks=1
+nbTasks=2
 
 alpha=1
 tol=1e-9
@@ -26,7 +26,7 @@ maxit=1e5
 Ftype=1
 Farg=1
 solverType=1
-saveMshs=0
+saveMshs=1
 
 NAME=test_$nbTasks
 
