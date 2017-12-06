@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
     if (!myRank)
 	cout << "#L2Err "
 	     << setw(WIDTH) << nbTasks
-	     << setw(WIDTH) << setprecision(15) << L2Err/totNbOfNodes
+	     << setw(WIDTH) << setprecision(8) << L2Err/totNbOfNodes
 	     << endl;
     
     Vector uErr = (uNum-uExa).cwiseAbs();
