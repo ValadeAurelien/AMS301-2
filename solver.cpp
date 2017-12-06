@@ -52,21 +52,20 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int totNbOfN
         /*if(myRank == 1)
             cout << "norme = " << r.norm() << endl;
         sleep(myRank*3);*/
-	res_tot = computeL2Norm(r, m, NO_PRINT)/totNbOfNodes;
+	res_tot = sqrt(computeDotProd(r, r, m, NO_PRINT))/totNbOfNodes;
 
-	if((it % 100) == 0){
-	    // printf("%i %i %f\n", myRank, it, r.norm());
-	    // if (myRank==0) printf("-1 %i %f\n", it, res_tot);
-	    if(myRank == 0){
-	    	printf("it %6.d res %.15f\n", it, res_tot); 
-	    }
-	}
+	if((it % 100) == 0 && myRank == 0)
+	    printf("#it %6.d res %.15g\n", it, res_tot); 
+		
 	it++;
     } while (res_tot > tol && it < maxit);
   
     if(myRank == 0) {
-	printf("\r#   -> final iteration: %i (prescribed max: %i)\n", it, maxit);
-	printf("#   -> final residual: %e (prescribed tol: %e)\n", res_tot, tol);
+	cout << "#final_it_res "
+	     << setw(WIDTH) << nbTasks
+	     << setw(WIDTH) << it 
+	     << setw(WIDTH) << setprecision(15) << res_tot
+	     << endl;
     }
 }
 
@@ -79,84 +78,83 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	p(A.rows()),
 	Au(A.rows()),
 	Ap(A.rows());
+    double res2_tot=0,
+	res2_tot_old=0,
+	alpha=0, beta=0,
+	tol2 = tol*tol;
+    int it=0;
 
-    double res = 0,
-	res2 = 0,
-	res2_old = 0,
-	res_tot = 0,
-	alpha, beta;
-    int it = 0;
     Au = A*u;
     exchangeAddInterfMPI(Au, m);
-    r = b - Au; p = r; 
+    r = b - Au; p = r;
+    res2_tot = computeDotProd(r, r, m, NO_PRINT);
     do {
-	res2 = r.dot(r);
-	
-	Ap = A*p;
-	exchangeAddInterfMPI(Ap, m);		
+    	Ap = A*p;
+    	exchangeAddInterfMPI(Ap, m);
 
-	alpha =  res2 / ( p.transpose()*Ap );
-	u += alpha * p;
+    	alpha =  res2_tot / computeDotProd(p, Ap, m, NO_PRINT);
+    	u += alpha * p;
+    	res2_tot_old = res2_tot;
+    	r -= alpha*Ap;
+    	res2_tot = computeDotProd(r, r, m, NO_PRINT);
 	
-	// cout << "a " << myRank << " " << alpha << endl;
-	res_tot = computeL2Norm(u, m, NO_PRINT);
-	// cout << "u " << myRank << " " << res_tot/totNbOfNodes << endl;
-
-	res2_old = res2;
-	// r -= alpha*Ap;
-	Au = A*u; exchangeAddInterfMPI(Au, m);
-	r = b - Au;
-	res2 = r.dot(r);
+    	beta = res2_tot / res2_tot_old;
+    	p = r + beta * p;
 	
-	beta = res2 / res2_old;
-	p = r + beta * p;
+    	if((it % 10) == 0 && myRank == 0)
+	    printf("#it %6.d res %.15g\n", it, sqrt(res2_tot_old)); 
+    	
+    	it++;
+    } while (res2_tot_old > tol2 && it < maxit);
 
-	res_tot = computeL2Norm(r, m, NO_PRINT)/totNbOfNodes;
-	if((it % 1) == 0) {
-	    // printf("loc %i %i %f\n", myRank, it, r.norm());
-	    // if (myRank==0) printf("glob -1 %i %f\n", it, res_tot);
-	    if(myRank == 0) {
-	    	printf("it %6.d res %.15g\n", it, res_tot); 
-	    }
-	}
-	it++;
-    } while (res_tot > tol && it < maxit);
   
-    if(myRank == 0){!
-	    printf("\r#   -> final iteration: %i (prescribed max: %i)\n", it, maxit);
-	printf("#   -> final residual: %e (prescribed tol: %e)\n", sqrt(res2_old), tol);
+    if(myRank == 0){
+	cout << "#final_it_res "
+	     << setw(WIDTH) << nbTasks
+	     << setw(WIDTH) << it 
+	     << setw(WIDTH) << setprecision(15) << sqrt(res2_tot_old)
+	     << endl;
     }
 }
-
+    // double res = 0,
+    // 	res2 = 0,
+    // 	res2_old = 0,
+    // 	res_tot = 0,
+    // 	alpha, beta;
+    // int it = 0;
     // Au = A*u;
     // exchangeAddInterfMPI(Au, m);
     // r = b - Au; p = r; 
-    // computeL2Norm(res_tot, r, m, NO_PRINT);
     // do {
-    // 	res2_tot = pow(res_tot, 2);
+    // 	res2 = r.dot(r);
 	
     // 	Ap = A*p;
     // 	exchangeAddInterfMPI(Ap, m);		
 
-    // 	alpha =  res2_tot / ( p.transpose()*Ap );
+    // 	alpha =  res2 / ( p.transpose()*Ap );
     // 	u += alpha * p;
 	
     // 	// cout << "a " << myRank << " " << alpha << endl;
+    // 	res_tot = computeL2Norm(u, m, NO_PRINT);
+    // 	// cout << "u " << myRank << " " << res_tot/totNbOfNodes << endl;
+
+    // 	res2_old = res2;
+    // 	// r -= alpha*Ap;
+    // 	Au = A*u; exchangeAddInterfMPI(Au, m);
+    // 	r = b - Au;
+    // 	res2 = r.dot(r);
 	
-    // 	res2_tot_old = res2_tot;
-    // 	r -= alpha*Ap;
-    // 	computeL2Norm(res_tot, r, m, NO_PRINT);
-    // 	res2_tot = pow(res_tot, 2);
-	
-    // 	beta = res2_tot / res2_tot_old;
+    // 	beta = res2 / res2_old;
     // 	p = r + beta * p;
-	
-    // 	if((it % 1) == 0){
+
+    // 	res_tot = computeL2Norm(r, m, NO_PRINT)/totNbOfNodes;
+    // 	if((it % 1) == 0) {
     // 	    // printf("loc %i %i %f\n", myRank, it, r.norm());
-    // 	    if (myRank==0) printf("glob -1 %i %f\n", it, res_tot);
-    // 	    // if(myRank == 0){
-    // 	    // 	printf("it %6.d res %.15f\n", it, res_tot); 
-    // 	    // }
+    // 	    // if (myRank==0) printf("glob -1 %i %f\n", it, res_tot);
+    // 	    if(myRank == 0) {
+    // 	    	printf("it %6.d res %.15g\n", it, res_tot); 
+    // 	    }
     // 	}
     // 	it++;
     // } while (res_tot > tol && it < maxit);
+

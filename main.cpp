@@ -6,7 +6,7 @@ int nbTasks;
 
 int main(int argc, char* argv[]) {
 
-    if (argc<11) {
+    if (argc<12) {
 	cout << "#Missing args, got :";
 	for (int i=0; i<argc; ++i ) cout << " " << argv[i];
 	cout << endl;
@@ -18,11 +18,12 @@ int main(int argc, char* argv[]) {
     int		Ftype	   = atof(argv[4]);
     double	Farg	   = atof(argv[5]);
     int		solverType = atoi(argv[6]);
-    char*	meshFile   = argv[7];
-    char*	outFFile   = argv[8];
-    char*	outUFile   = argv[9];
-    char*	outUeFile  = argv[10];
-    char*	outEFile   = argv[11];
+    int         saveMshs   = atoi(argv[7]);
+    char*	meshFile   = argv[8];
+    char*	outFFile   = argv[9];
+    char*	outUFile   = argv[10];
+    char*	outUeFile  = argv[11];
+    char*	outEFile   = argv[12];
 
     // 1. Initialize MPI
     clock_t c0 = clock();
@@ -60,12 +61,19 @@ int main(int argc, char* argv[]) {
 	}
     }
 
-    saveToMsh(uNum, m, "solF", outFFile);
+    if (saveMshs)
+	saveToMsh(uNum, m, "solF", outFFile);
 
     Problem p;
     buildLinearSystem(p, m, alpha, f);
     // buildDirichletBC(p,m,uExa); // (Only for the extension of the project)
-
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (!myRank)
+	cout << "#time_build "
+	     << setw(WIDTH) << nbTasks
+	     << setw(WIDTH) << ((double) clock() - c0)/CLOCKS_PER_SEC
+	     << endl;
+    
     // 4. Solve problem
     switch(solverType) {
     case JACOBI:
@@ -80,15 +88,29 @@ int main(int argc, char* argv[]) {
     }
     // 5. Compute error and export fields
 
-    computeL2RelatErr(uNum, uExa, m, PRINT);
-    Vector uErr = (uNum-uExa).cwiseAbs();
+    double L2Err = computeL2RelatErr(uNum, uExa, m, NO_PRINT);
     if (!myRank)
-	cout << "#time " << ((double) clock() - c0)/CLOCKS_PER_SEC << endl;
-    saveToMsh(f, m, "solF", outFFile);
-    saveToMsh(uNum, m, "solNum", outUFile);
-    saveToMsh(uExa, m, "solRef", outUeFile);
-    saveToMsh(uErr, m, "solErr", outEFile);
+	cout << "#L2Err "
+	     << setw(WIDTH) << nbTasks
+	     << setw(WIDTH) << setprecision(15) << L2Err
+	     << endl;
+    
+    Vector uErr = (uNum-uExa).cwiseAbs();
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (!myRank)
+	cout << "#time_end "
+	     << setw(WIDTH) << nbTasks
+	     << setw(WIDTH) << ((double) clock() - c0)/CLOCKS_PER_SEC
+	     << endl;
 
+
+    if (saveMshs) {
+	saveToMsh(f, m, "solF", outFFile);
+	saveToMsh(uNum, m, "solNum", outUFile);
+	saveToMsh(uExa, m, "solRef", outUeFile);
+	saveToMsh(uErr, m, "solErr", outEFile);
+    }
+    
     // 6. Finilize MPI
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();

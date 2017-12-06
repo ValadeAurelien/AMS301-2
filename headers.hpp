@@ -11,6 +11,8 @@
 #include <Eigen/Eigen>
 #include <mpi.h>
 #include <unistd.h>
+#define WIDTH 15 
+
 using namespace std;
 
 //================================================================================
@@ -105,7 +107,7 @@ void buildLocalNumbering(Mesh& m);
 void exchangeAddInterfMPI(Vector& vec, Mesh& m);
 
 // Compute the local L2 error
-double computeL2Norm(const Vector& uNum, const Mesh& m, int print_type);
+double computeDotProd(const Vector& uNum, const Vector& uNum2, const Mesh& m, int print_types);
 double computeL2RelatErr(const Vector& uNum, const Vector& uExa, const Mesh& m, int print_types);
 
 // Send res to 0

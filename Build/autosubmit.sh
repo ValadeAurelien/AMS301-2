@@ -15,7 +15,7 @@ NAME=test_$nbTasks
 Wdir=benchmark
 outWdir=$Wdir/$NAME
 
-meshFile=$Wdir/bigcarre_64.msh
+meshFile=$Wdir/mshs/bigcarre_64.msh
 outFFileName=$outWdir/solF
 outUFileName=$outWdir/solNum
 outUeFileName=$outWdir/solExa
