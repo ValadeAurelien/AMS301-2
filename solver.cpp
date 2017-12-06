@@ -112,7 +112,7 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	cout << "#final_it_res "
 	     << setw(WIDTH) << nbTasks
 	     << setw(WIDTH) << it 
-	     << setw(WIDTH) << setprecision(15) << sqrt(res2_tot_old)
+	     << setw(WIDTH) << setprecision(8) << sqrt(res2_tot_old)
 	     << endl;
     }
 }
