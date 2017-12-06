@@ -108,7 +108,7 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m);
 
 // Compute the local L2 error
 double computeDotProd(const Vector& uNum, const Vector& uNum2, const Mesh& m, int print_types);
-double computeL2RelatErr(const Vector& uNum, const Vector& uExa, const Mesh& m, int print_types);
+double computeL2Err(const Vector& uNum, const Vector& uExa, const Mesh& m, int print_types);
 
 // Send res to 0
 void sendResTo0(double res2);

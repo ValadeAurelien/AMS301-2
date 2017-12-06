@@ -235,16 +235,15 @@ double computeDotProd(const Vector& uNum, const Vector& uNum2, const Mesh& m, in
     return dot;
 }
 
-double computeL2RelatErr(const Vector& uNum, const Vector& uExa, const Mesh& m, int print_type) {
-    double L2_norm = computeDotProd(uExa, uExa, m, NO_PRINT),
-	   L2_err = 0;
+double computeL2Err(const Vector& uNum, const Vector& uExa, const Mesh& m, int print_type) {
+    double L2_err = 0;
     Vector uErr = (uNum - uExa).cwiseAbs();
     double L2_err_loc = pow(uErr.cwiseProduct(m.nodesToCompute).norm(), 2);
     if (nbTasks>1)
 	MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     else
 	L2_err = L2_err_loc;
-    L2_err = sqrt(L2_err/L2_norm);
+    L2_err = sqrt(L2_err);
 
     if(myRank == 0 && (print_type & PRINT))
 	    printf("#error : %f\n", L2_err); 

@@ -88,11 +88,11 @@ int main(int argc, char* argv[]) {
     }
     // 5. Compute error and export fields
 
-    double L2Err = computeL2RelatErr(uNum, uExa, m, NO_PRINT);
+    double L2Err = computeL2Err(uNum, uExa, m, NO_PRINT);
     if (!myRank)
 	cout << "#L2Err "
 	     << setw(WIDTH) << nbTasks
-	     << setw(WIDTH) << setprecision(15) << L2Err
+	     << setw(WIDTH) << setprecision(15) << L2Err/totNbOfNodes
 	     << endl;
     
     Vector uErr = (uNum-uExa).cwiseAbs();
