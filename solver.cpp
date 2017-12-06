@@ -64,7 +64,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int totNbOfN
 	cout << "#final_it_res "
 	     << setw(WIDTH) << nbTasks
 	     << setw(WIDTH) << it 
-	     << setw(WIDTH) << setprecision(15) << res_tot
+	     << setw(WIDTH) << setprecision(8) << res_tot
 	     << endl;
     }
 }
