@@ -8,29 +8,32 @@ function printAndDo {
      Ftype $5
      Farg $6
      solverType $7
-     meshFile $8
-     outFFileName $9
-     outUFileName ${10}
-     outUeFileName ${11}
-     outEFileName ${12}" | column -t | sed 's/ /./g'
-    echo ARGV : $2 $3 $4 $5 $6 $7 $8 ${9} ${10} ${11} ${12}
-    make && (mpirun -np $1 ./solver $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12}) #> log
+     saveMshs $8
+     meshFile $9
+     outFFileName ${10}
+     outUFileName ${11}
+     outUeFileName ${12}
+     outEFileName ${13}" | column -t | sed 's/ /./g'
+    echo ARGV : $2 $3 $4 $5 $6 $7 $8 ${9} ${10} ${11} ${12} ${13}
+    make && (mpirun -np $1 ./solver $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12} ${13}) #> log
 }
 
-nbTasks=8
+nbTasks=1
+
 alpha=1
 tol=1e-9
-maxit=5e2
+maxit=1e5
 Ftype=1
 Farg=1
 solverType=1
+saveMshs=0
 
 NAME=test_$nbTasks
 
 Wdir=benchmark
 outWdir=$Wdir/$NAME
 
-meshFile=$Wdir/mshs/carre_$nbTasks.msh
+meshFile=$Wdir/mshs/carre_64.msh
 outFFileName=$outWdir/solF
 outUFileName=$outWdir/solNum
 outUeFileName=$outWdir/solExa
@@ -40,4 +43,4 @@ mkdir 2>/dev/null outputs errors $outWdir
 rm 2>/dev/null outputs/$NAME errors/$NAME $outWdir/*
 cp $meshFile $outWdir
 
-printAndDo $nbTasks $outRunOpt $alpha $tol $maxit $Ftype $Farg $solverType $meshFile $outFFileName $outUFileName $outUeFileName $outEFileName
+printAndDo $nbTasks $outRunOpt $alpha $tol $maxit $Ftype $Farg $solverType $saveMshs $meshFile $outFFileName $outUFileName $outUeFileName $outEFileName
