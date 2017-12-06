@@ -220,33 +220,35 @@ void exchangeAddInterfMPI(Vector& vec, Mesh& m)
     delete requestRcv;
 }
 
-void computeL2Norm(double& L2_err, const Vector& uNum, const Mesh& m, int print_type) {
-    double L2_err_loc = pow(uNum.cwiseProduct(m.nodesToCompute).norm(), 2);
-    L2_err = 0;
+double computeL2Norm(const Vector& uNum, const Mesh& m, int print_type) {
+    double L2_err_loc = pow(uNum.cwiseProduct(m.nodesToCompute).norm(), 2),
+	L2_err = 0;
     if (nbTasks>1)
 	MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     else
 	L2_err = L2_err_loc;
-    L2_err = sqrt(L2_err);
+    return sqrt(L2_err);
     if(myRank == 0) {
 	if (print_type & PRINT)
-	    printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
+	    printf("#norm : %f\n", L2_err); 
     }
 }
 
-void computeL2Err(double& L2_err, const Vector& uNum, const Vector& uExa, const Mesh& m, int print_type) {
+double computeL2RelatErr(const Vector& uNum, const Vector& uExa, const Mesh& m, int print_type) {
+    double L2_norm = computeL2Norm(uExa, m, NO_PRINT),
+	L2_err = 0;
     Vector uErr = (uNum - uExa).cwiseAbs();
     double L2_err_loc = pow(uErr.cwiseProduct(m.nodesToCompute).norm(), 2);
-    L2_err = 0;
     if (nbTasks>1)
 	MPI_Allreduce(&L2_err_loc, &L2_err, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
     else
 	L2_err = L2_err_loc;
-    L2_err = sqrt(L2_err);
+    L2_err = sqrt(L2_err)/L2_norm;
     if(myRank == 0) {
 	if (print_type & PRINT)
-	    printf("#== Affichage Erreur \n#   -> Erreur L2 : %f\n", L2_err); 
+	    printf("#error : %f\n", L2_err); 
     }
+    return L2_norm;
 }
 
 

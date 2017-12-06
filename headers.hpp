@@ -105,8 +105,8 @@ void buildLocalNumbering(Mesh& m);
 void exchangeAddInterfMPI(Vector& vec, Mesh& m);
 
 // Compute the local L2 error
-void computeL2Norm(double& L2_err, const Vector& uNum, const Mesh& m, int print_type);
-void computeL2Err(double& L2_err_loc, const Vector& uNum, const Vector& uExa, const Mesh& m, int print_types);
+double computeL2Norm(const Vector& uNum, const Mesh& m, int print_type);
+double computeL2RelatErr(const Vector& uNum, const Vector& uExa, const Mesh& m, int print_types);
 
 // Send res to 0
 void sendResTo0(double res2);
@@ -125,6 +125,8 @@ void buildDirichletBC(Problem& p, Mesh& m, Vector& uExa);
 //==== Functions in 'solver.cpp'
 
 // Solution of the system Au=b with Jacobi
-void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit);
-void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit);
+void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m,
+	    double tol, int totNbOfNodes, int maxit);
+void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m,
+		       double tol, int totNbOfNodes, int maxit);
 #endif /* HEADERS_HPP */

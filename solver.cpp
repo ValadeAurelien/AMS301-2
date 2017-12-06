@@ -7,14 +7,15 @@ extern int nbTasks;
 // Solution of the system Au=b with Jacobi
 //================================================================================
 
-void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
+void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int totNbOfNodes, int maxit)
 {
     if(myRank == 0)
 	printf("#== jacobi\n");
   
     // Compute the solver matrices
     Vector Mdiag(A.rows()),
-	r(A.rows());
+	r(A.rows()),
+	Au, Nu;
     SpMatrix N(A.rows(), A.cols());
 
     for(int k = 0; k < A.outerSize(); ++k){
@@ -38,18 +39,20 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
     int it = 0;
     do {
 	// Compute N*u
-	Vector Nu = N*u;
+	Nu = N*u;
 	exchangeAddInterfMPI(Nu, m);
 	Nu += b;
 	// Update field
 	for(int n=0; n<m.nbOfNodes; n++)
 	    u(n) = 1/Mdiag(n) * Nu(n);
-        
-	r = b - A*u;
+
+	Au = A * u;
+	exchangeAddInterfMPI(Au, m);
+	r = b - Au;
         /*if(myRank == 1)
             cout << "norme = " << r.norm() << endl;
         sleep(myRank*3);*/
-	computeL2Norm(res_tot, r, m, NO_PRINT);
+	res_tot = computeL2Norm(r, m, NO_PRINT)/totNbOfNodes;
 
 	if((it % 100) == 0){
 	    // printf("%i %i %f\n", myRank, it, r.norm());
@@ -67,7 +70,7 @@ void jacobi(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
     }
 }
 
-void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int maxit)
+void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, int totNbOfNodes, int maxit)
 {
     if(myRank == 0) 
 	printf("#== Conjugate Gradient\n");
@@ -96,21 +99,24 @@ void conjugateGradient(SpMatrix& A, Vector& b, Vector& u, Mesh& m, double tol, i
 	u += alpha * p;
 	
 	// cout << "a " << myRank << " " << alpha << endl;
-	// computeL2Norm(res_tot, u, m, NO_PRINT);
-	// cout << "u " << myRank << " " << res_tot << endl;
+	res_tot = computeL2Norm(u, m, NO_PRINT);
+	// cout << "u " << myRank << " " << res_tot/totNbOfNodes << endl;
+
 	res2_old = res2;
-	r -= alpha*Ap;
+	// r -= alpha*Ap;
+	Au = A*u; exchangeAddInterfMPI(Au, m);
+	r = b - Au;
 	res2 = r.dot(r);
 	
 	beta = res2 / res2_old;
 	p = r + beta * p;
 
-	computeL2Norm(res_tot, r, m, NO_PRINT);
-	if((it % 10) == 0) {
+	res_tot = computeL2Norm(r, m, NO_PRINT)/totNbOfNodes;
+	if((it % 1) == 0) {
 	    // printf("loc %i %i %f\n", myRank, it, r.norm());
 	    // if (myRank==0) printf("glob -1 %i %f\n", it, res_tot);
-	    if(myRank == 0){
-	    	printf("it %6.d res %.15f\n", it, res_tot); 
+	    if(myRank == 0) {
+	    	printf("it %6.d res %.15g\n", it, res_tot); 
 	    }
 	}
 	it++;

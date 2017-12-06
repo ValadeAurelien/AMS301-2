@@ -69,10 +69,10 @@ int main(int argc, char* argv[]) {
     // 4. Solve problem
     switch(solverType) {
     case JACOBI:
-	jacobi(p.A, p.b, uNum, m, tol, maxit);
+	jacobi(p.A, p.b, uNum, m, tol, totNbOfNodes, maxit);
 	break;
     case CONJUGATEGRADIENT:
-	conjugateGradient(p.A, p.b, uNum, m, tol, maxit);
+	conjugateGradient(p.A, p.b, uNum, m, tol, totNbOfNodes, maxit);
 	break;
     default:
 	printf("Wrong solver choice...");
@@ -80,8 +80,7 @@ int main(int argc, char* argv[]) {
     }
     // 5. Compute error and export fields
 
-    double L2_err;
-    computeL2Err(L2_err, uNum, uExa, m, PRINT);
+    computeL2RelatErr(uNum, uExa, m, PRINT);
     Vector uErr = (uNum-uExa).cwiseAbs();
     if (!myRank)
 	cout << "#time " << ((double) clock() - c0)/CLOCKS_PER_SEC << endl;

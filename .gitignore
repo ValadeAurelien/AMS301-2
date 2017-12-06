@@ -3,9 +3,9 @@
 eigen/*
 nbproject/*
 *output*
-Build/benchmark/*
-!Build/benchmark/*.geo
-!Build/benchmark/*.sh
+Build/benchmark/**/*.msh
+!Build/benchmark/mshs/*.geo
+!Build/benchmark/mshs/*.sh
 *log*
 Build/solver
 Projet-svg/

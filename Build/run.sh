@@ -17,12 +17,11 @@ function printAndDo {
     make && (mpirun -np $1 ./solver $2 $3 $4 $5 $6 $7 $8 $9 ${10} ${11} ${12}) #> log
 }
 
-nbTasks=16
-
+nbTasks=8
 alpha=1
 tol=1e-9
-maxit=1
-Ftype=0
+maxit=5e2
+Ftype=1
 Farg=1
 solverType=1
 
@@ -31,7 +30,7 @@ NAME=test_$nbTasks
 Wdir=benchmark
 outWdir=$Wdir/$NAME
 
-meshFile=$Wdir/carre_64.msh
+meshFile=$Wdir/mshs/carre_$nbTasks.msh
 outFFileName=$outWdir/solF
 outUFileName=$outWdir/solNum
 outUeFileName=$outWdir/solExa
