@@ -1,23 +1,22 @@
 #! /bin/sh
 
-nbTasksMin=0
-nbTasksStep=4
-nbTasksMax=64
-
-alpha=1
-tol=1e-6
-maxit=1e6
-Ftype=1
-Farg=1
-solverType=0
-saveMshs=0
-
-NAME=test_$nbTasks
-
+nbTasksMin=0 
+nbTasksStep=4 
+nbTasksMax=64 
+ 
+alpha=1 
+tol=1e-9 
+maxit=1e5 
+Ftype=1 
+Farg=1 
+solverType=1 
+saveMshs=0 
+ 
+NAME=StrongSca_${nbTasksMin}_${nbTasksStep}_${nbTasksMax}  
 Wdir=benchmark
 outWdir=$Wdir/$NAME
 
-meshFile=$Wdir/bigcarre_64.msh
+meshFile=$Wdir/mshs/bigcarre_64.msh
 outFFileName=$outWdir/solF
 outUFileName=$outWdir/solNum
 outUeFileName=$outWdir/solExa
@@ -30,4 +29,4 @@ mkdir 2>/dev/null outputs errors $outWdir
 rm 2>/dev/null outputs/$NAME errors/$NAME $outWdir/*
 cp $meshFile $outWdir
 
-qsub -N $NAME -o outputs/$NAME -e errors/$NAME -cwd -pe orte $nbTasks $ARGS_LIST ./.auxsubmitStrongSca.sh
+qsub -N $NAME -o outputs/$NAME -e errors/$NAME -cwd -pe orte $nbTasksMax $ARGS_LIST ./.auxsubmitStrongSca.sh
