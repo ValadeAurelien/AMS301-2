@@ -1,9 +1,9 @@
 #! /bin/sh
 
-for i in $(seq 1 $logalphanb)
+for i in $(seq 1 $logtolnb)
 do
-    alpha=$(python -c "print( 10**($logalphamin+($logalphamax $logalphamin*(-1))*$i/$logalphanb) )")
-    alpha=${alpha:0:5}
-    echo $i $alpha
+    tol=$(python -c "print( 10**($logtolmin+($logtolmax $logtolmin*(-1))*$i/$logtolnb) )")
+    tol=${tol:0:5}
+    echo $i $tol
     make VERBOSE=0 && mpirun -np $nbTasks ./solver $alpha $tol $maxit $Ftype $Farg $solverType $saveMshs $meshFile $outFFileName $outUFileName $outUeFileName $outEFileName 
 done
