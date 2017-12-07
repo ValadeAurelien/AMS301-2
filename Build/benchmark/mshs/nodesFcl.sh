@@ -1,22 +1,23 @@
 #!/bin/sh
 
-logclmin=-2
+logclmin=-2.5
 logclmax=0
-nbsteps=10
-infile=nodeFcl_init
-outfile=nodesFcl_res
+nbsteps=50
+prec=7
+infile=nodesFcl_init
+outfile=nodesFcl_res.txt
+
 echo "#cl nodes" > $outfile
 
 for i in $(seq 1 $nbsteps)
 do
     echo $i
-    echo "10**($logclmin+($logclmax $logclmin)*$i/$nbsteps)"
-    cl=$(calc "10^($logclmin+($logclmax-$logclmin)*$i/$nbsteps)")
-    echo $cl
-    ./geo2msh $infile.geo $cl $cl 1 1 1
-    nodes=$(grep -A 1 "\$Nodes" $infile_1.msh | tail -n 1)
+    cl=$(calc "10^($logclmin+($logclmax $logclmin*(-1))*$i/$nbsteps)" | sed 's/~//g')
+    cl=${cl:0:$prec}
+    ./geo2msh.sh $infile.geo $cl $cl 1 1 1
+    nodes=$(grep -A 1 "\$Nodes" ${infile}_1.msh | tail -n 1)
     echo $cl $nodes >> $outfile
 done
 
-column -t $outfile > $outfile_tmp
-mv $outfile_tmp $outfile
+column -t $outfile > ${outfile}_tmp
+mv ${outfile}_tmp $outfile
